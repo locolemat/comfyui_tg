@@ -59,7 +59,7 @@ with open('config.yaml') as f:
     MAX_STEPS = config['comfyui']['MAX_STEPS']
     TOKEN_MERGE_RATIO = config['comfyui']['TOKEN_MERGE_RATIO']
     CLIP_SKIP = config['comfyui']['CLIP_SKIP']
-    ALLOW_DIRECT_LORA = config['comfyui']['ALLOW_DIRECT_LORA']
+    #ALLOW_DIRECT_LORA = config['comfyui']['ALLOW_DIRECT_LORA']
 
 if not os.path.exists('upload'):
     log.info("Creating upload folder")
@@ -442,14 +442,11 @@ def get_images(ws, prompt):
 async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
-
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
-
     ws = websocket.WebSocket()
     ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS, client_id))
     images = get_images(ws, workflow)
-
     for node_id in images:
         for image_data in images[node_id]:
             image = Image.open(io.BytesIO(image_data))

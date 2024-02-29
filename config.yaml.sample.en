@@ -1,5 +1,5 @@
 network:
-  BOT_TOKEN: 'xxx:xxxxxx'
+  BOT_TOKEN: '7080655309:AAEPZcAfbIp8m949ly6ffWLZzttLy2YLy30'
   SERVER_ADDRESS: "127.0.0.1:8188"
 
 bot:
