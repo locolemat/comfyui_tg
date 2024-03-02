@@ -177,7 +177,7 @@ async def check_access(id):
     return False
 
 
-def configure(prompt, cfg):
+def configure(prompt, cfg):  
     config = cfg
     config['lora'] = get_lora(prompt)
     config['model'] = get_model(prompt)
@@ -238,7 +238,6 @@ def configure(prompt, cfg):
             config['ipa_strength'] = config['ipa_strength'] + '.0'
     else:
         config['ipa_strength'] = CONTROLNET_STRENGTH
-
     config['seed'] = random.randint(1, 18446744073709519872)
 
     if TRANSLATE:
@@ -293,7 +292,7 @@ def setup_workflow(prompt, config):
         workflow = copy.deepcopy(wf_noupscale)
 
     prompt, negative_prompt, config = configure(prompt, config)
-
+    
     for node in workflow:
         if ("ckpt_name" in workflow[node]['inputs']):
             workflow[node]['inputs']['ckpt_name'] = config['model']['model_file']
@@ -341,9 +340,10 @@ def setup_workflow(prompt, config):
 
         if ("steps" in workflow[node]['inputs']):
             workflow[node]['inputs']['steps'] = config['steps']
-
+            
         if ("stop_at_clip_layer" in workflow[node]['inputs']):
             workflow[node]['inputs']['stop_at_clip_layer'] = CLIP_SKIP
+
 
         if ("text" in workflow[node]['inputs']):
             if (workflow[node]['inputs']['text'] == 'positive prompt'):
@@ -447,6 +447,7 @@ async def comfy(chat, prompts, cfg):
     ws = websocket.WebSocket()
     ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS, client_id))
     images = get_images(ws, workflow)
+    
     for node_id in images:
         for image_data in images[node_id]:
             image = Image.open(io.BytesIO(image_data))
@@ -482,6 +483,23 @@ async def start_message(message):
     for l in loras:
         ld = ld + l['name'] + "\n"
     await bot.send_message(chat_id=message.chat.id, text=ld)
+
+
+"""
+Отправить сообщение с видео
+"""
+@bot.message_handler(commands=['video'])
+async def start_message(message):
+    extensions = ['mp3', 'mp4']
+    videos_location = 'videos'
+    videos = os.listdir('videos')
+
+    for i, video in enumerate(videos):
+        if not video[video.find('.')+1::] in extensions:
+            videos.pop(i)
+
+    video = f'{videos_location}/{random.choice(videos)}'
+    await bot.send_video(chat_id=message.chat.id, video=open(video, 'rb'), supports_streaming=True)
 
 
 @bot.message_handler(commands=['me'])
