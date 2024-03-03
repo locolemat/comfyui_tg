@@ -41,6 +41,7 @@ with open('config.yaml') as f:
     TRANSLATE = config['bot']['TRANSLATE']
     HELP_TEXT = config['bot']['HELP_TEXT']
     DENY_TEXT = config['bot']['DENY_TEXT']
+    USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
 
     DEFAULT_MODEL = config['comfyui']['DEFAULT_MODEL']
     DEFAULT_VAE = config['comfyui']['DEFAULT_VAE']
@@ -391,7 +392,6 @@ def setup_workflow(prompt, config):
 
     return workflow
 
-
 def queue_prompt(prompt):
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
@@ -462,11 +462,36 @@ async def comfy(chat, prompts, cfg):
             await bot.send_document(chat_id=chat.id, document=pd)
 
 
+@bot.message_handler(commands=['video'])
+async def start_message(message):
+    """
+    Отправить сообщение с видео
+    """
+    extensions = ['mp3', 'mp4']
+    videos_location = 'videos'
+    videos = os.listdir('videos')
+
+    for i, video in enumerate(videos):
+        if not video[video.find('.')+1::] in extensions:
+            videos.pop(i)
+
+    video = f'{videos_location}/{random.choice(videos)}'
+    await bot.send_video(chat_id=message.chat.id, video=open(video, 'rb'), supports_streaming=True)
+
+
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['start'])
 async def start_message(message):
     print(message.chat)
-    await bot.send_message(chat_id=message.chat.id, text=HELP_TEXT)
+    add_config(message.chat)
+    button_foo = telebot.types.InlineKeyboardButton('Video', callback_data='/video')
+    button_bar = telebot.types.InlineKeyboardButton('Get config', callback_data='bar')
+
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    keyboard.add(button_foo)
+    keyboard.add(button_bar)
+
+    await bot.send_message(chat_id=message.chat.id, text=HELP_TEXT, reply_markup=keyboard)
 
 
 @bot.message_handler(commands=['models'])
@@ -484,22 +509,6 @@ async def start_message(message):
         ld = ld + l['name'] + "\n"
     await bot.send_message(chat_id=message.chat.id, text=ld)
 
-
-"""
-Отправить сообщение с видео
-"""
-@bot.message_handler(commands=['video'])
-async def start_message(message):
-    extensions = ['mp3', 'mp4']
-    videos_location = 'videos'
-    videos = os.listdir('videos')
-
-    for i, video in enumerate(videos):
-        if not video[video.find('.')+1::] in extensions:
-            videos.pop(i)
-
-    video = f'{videos_location}/{random.choice(videos)}'
-    await bot.send_video(chat_id=message.chat.id, video=open(video, 'rb'), supports_streaming=True)
 
 
 @bot.message_handler(commands=['me'])
@@ -585,6 +594,62 @@ async def message_reply(message):
 
     await comfy(message.chat, prompt, cfg)
 
+
+def add_config(data: telebot.types.Chat) -> bool:
+    """
+    Добавить конфиг пользователя по данным о нём из бота
+
+    Принимает message.chat в качестве параметра
+
+    Возвращает False, если конфиг с таким айди уже существует
+    """
+    filename = f'{USER_CONFIGS_LOCATION}/config_{data.id}.yaml'
+
+    if not os.path.exists(filename):
+        with open(filename, 'w') as f:
+            user_data = {'id': data.id, 
+                         'username': data.username, 
+                         'first_name': data.first_name, 
+                         'last_name': data.last_name}
+
+            yaml.dump(user_data, f)
+            return True
+        
+    return False
+
+def read_config(user: int) -> dict:
+    """
+    Прочитать конфиг пользователя по данному Телеграм ID.
+
+    Возвращает пустой словарь, если конфиг указанного пользователя не существует.
+    """
+    filename = f'{USER_CONFIGS_LOCATION}/config_{user}.yaml'
+
+    if not os.path.exists(filename):
+        return {}
+    else:
+        with open(filename, 'r') as f:
+            return yaml.safe_load(f)
+    
+
+def update_config(user: int, data: dict) -> bool:
+    """
+    Обновить конфиг указанного по Телеграм ID пользователя.
+
+    Принимает ID и словарь - новый желаемый конфиг.
+
+    Возвращает False, если указанного пользователя не существует.
+    """
+    filename = f'{USER_CONFIGS_LOCATION}/config_{user}.yaml'
+
+    if not os.path.exists(filename):
+        return False
+    else:
+        with open(filename, 'w') as f:
+            yaml.dump(data, f)
+            return True
+    
+    
 
 log.info("Starting bot")
 
