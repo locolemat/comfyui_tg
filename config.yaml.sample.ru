@@ -5,6 +5,7 @@ network:
 bot:
   TRANSLATE: True
   DENY_TEXT: "Access denied"
+  USER_CONFIGS_LOCATION: "user_configs"
   HELP_TEXT: "Для генерации можно использовать текст на русском языке
 
 По-умолчанию каритнка создаётся в разрешении 512x512 пикселей

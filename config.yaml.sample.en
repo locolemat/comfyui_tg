@@ -5,6 +5,7 @@ network:
 bot:
   TRANSLATE: True
   DENY_TEXT: "Access denied"
+  USER_CONFIGS_LOCATION: "user_configs"
   HELP_TEXT: "You can use text in any language to generate
 
 By default, the image is created in a resolution of 512x512 pixels
