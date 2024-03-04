@@ -429,8 +429,8 @@ def get_images(ws, prompt):
     for o in history['outputs']:
         for node_id in history['outputs']:
             node_output = history['outputs'][node_id]
+            images_output = []
             if 'images' in node_output:
-                images_output = []
                 for image in node_output['images']:
                     image_data = get_image(image['filename'], image['subfolder'], image['type'])
                     images_output.append(image_data)
@@ -438,6 +438,33 @@ def get_images(ws, prompt):
 
     return output_images
 
+
+def get_video(ws, prompt):
+    prompt_id = queue_prompt(prompt)['prompt_id']
+    output_videos = {}
+    while True:
+        out = ws.recv()
+        if isinstance(out, str):
+            message = json.loads(out)
+            if message['type'] == 'executing':
+                data = message['data']
+                if data['node'] is None and data['prompt_id'] == prompt_id:
+                    break
+        else:
+            continue
+
+    history = get_history(prompt_id)[prompt_id]
+    for o in history['outputs']:
+        for node_id in history['outputs']:
+            node_output = history['outputs'][node_id]
+            videos_output = []
+            if 'gifs' in node_output:
+                for video in node_output['gifs']:
+                    video_data = get_image(video['filename'], video['subfolder'], video['type'])
+                    videos_output.append(video_data)
+            output_videos[node_id] = videos_output
+
+    return output_videos
 
 async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
@@ -447,51 +474,39 @@ async def comfy(chat, prompts, cfg):
     ws = websocket.WebSocket()
     ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS, client_id))
     images = get_images(ws, workflow)
-    
+    videos = get_video(ws, workflow)
+
     for node_id in images:
         for image_data in images[node_id]:
-            image = Image.open(io.BytesIO(image_data))
+            image = open(io.BytesIO(image_data),'rb')
+
             try:
                 await bot.send_photo(chat_id=chat.id, photo=image, caption=prompts)
             except:
                 log.error("Error sending photo")
+
             tmpn = "generated/img_" + str(chat.id) + "_" + sanitize(prompts[0:100]) + "_" + str(cmt()) + ".png"
             png = Image.open(io.BytesIO(image_data))
             png.save(tmpn)
             pd = open(tmpn, 'rb')
             await bot.send_document(chat_id=chat.id, document=pd)
 
+    for node_id in videos:
+        for video_data in videos[node_id]:
+            video = video_data
 
-@bot.message_handler(commands=['video'])
-async def start_message(message):
-    """
-    Отправить сообщение с видео
-    """
-    extensions = ['mp3', 'mp4']
-    videos_location = 'videos'
-    videos = os.listdir('videos')
-
-    for i, video in enumerate(videos):
-        if not video[video.find('.')+1::] in extensions:
-            videos.pop(i)
-
-    video = f'{videos_location}/{random.choice(videos)}'
-    await bot.send_video(chat_id=message.chat.id, video=open(video, 'rb'), supports_streaming=True)
+            try:
+                await bot.send_video(chat_id=chat.id, video=video, supports_streaming=True)
+            except:
+                log.error("Error sending video")
 
 
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['start'])
 async def start_message(message):
-    print(message.chat)
     add_config(message.chat)
-    button_foo = telebot.types.InlineKeyboardButton('Video', callback_data='/video')
-    button_bar = telebot.types.InlineKeyboardButton('Get config', callback_data='bar')
 
-    keyboard = telebot.types.InlineKeyboardMarkup()
-    keyboard.add(button_foo)
-    keyboard.add(button_bar)
-
-    await bot.send_message(chat_id=message.chat.id, text=HELP_TEXT, reply_markup=keyboard)
+    await bot.send_message(chat_id=message.chat.id, text=HELP_TEXT)
 
 
 @bot.message_handler(commands=['models'])
