@@ -1,6 +1,9 @@
 network:
   BOT_TOKEN: 'xxx:xxxxxx'
-  SERVER_ADDRESS: "127.0.0.1:8188"
+  SERVER_ADDRESSES: 
+    - "127.0.0.1:8188"
+    - "127.0.0.1:8189"
+    - "127.0.0.1:8190"
 
 bot:
   TRANSLATE: True
