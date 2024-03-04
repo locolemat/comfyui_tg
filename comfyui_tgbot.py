@@ -33,10 +33,12 @@ import urllib.request
 import urllib.parse
 from sanitize_filename import sanitize
 
+from server_address import ServerAddress, ServerAddressController
+
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
-    SERVER_ADDRESS = config['network']['SERVER_ADDRESS']
+    SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
 
     TRANSLATE = config['bot']['TRANSLATE']
     HELP_TEXT = config['bot']['HELP_TEXT']
@@ -392,27 +394,27 @@ def setup_workflow(prompt, config):
 
     return workflow
 
-def queue_prompt(prompt):
+def queue_prompt(prompt, address):
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
-    req =  urllib.request.Request("http://{}/prompt".format(SERVER_ADDRESS), data=data)
+    req =  urllib.request.Request("http://{}/prompt".format(address), data=data)
     return json.loads(urllib.request.urlopen(req).read())
 
 
-def get_image(filename, subfolder, folder_type):
+def get_image(filename, subfolder, folder_type, address):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
     url_values = urllib.parse.urlencode(data)
-    with urllib.request.urlopen("http://{}/view?{}".format(SERVER_ADDRESS, url_values)) as response:
+    with urllib.request.urlopen("http://{}/view?{}".format(address, url_values)) as response:
         return response.read()
 
 
-def get_history(prompt_id):
-    with urllib.request.urlopen("http://{}/history/{}".format(SERVER_ADDRESS, prompt_id)) as response:
+def get_history(prompt_id, address):
+    with urllib.request.urlopen("http://{}/history/{}".format(address, prompt_id)) as response:
         return json.loads(response.read())
 
 
-def get_images(ws, prompt):
-    prompt_id = queue_prompt(prompt)['prompt_id']
+def get_images(ws, prompt, address):
+    prompt_id = queue_prompt(prompt, address)['prompt_id']
     output_images = {}
     while True:
         out = ws.recv()
@@ -425,22 +427,22 @@ def get_images(ws, prompt):
         else:
             continue
 
-    history = get_history(prompt_id)[prompt_id]
+    history = get_history(prompt_id, address)[prompt_id]
     for o in history['outputs']:
         for node_id in history['outputs']:
             node_output = history['outputs'][node_id]
             images_output = []
             if 'images' in node_output:
                 for image in node_output['images']:
-                    image_data = get_image(image['filename'], image['subfolder'], image['type'])
+                    image_data = get_image(image['filename'], image['subfolder'], image['type'], address)
                     images_output.append(image_data)
             output_images[node_id] = images_output
 
     return output_images
 
 
-def get_video(ws, prompt):
-    prompt_id = queue_prompt(prompt)['prompt_id']
+def get_video(ws, prompt, address):
+    prompt_id = queue_prompt(prompt, address)['prompt_id']
     output_videos = {}
     while True:
         out = ws.recv()
@@ -453,14 +455,14 @@ def get_video(ws, prompt):
         else:
             continue
 
-    history = get_history(prompt_id)[prompt_id]
+    history = get_history(prompt_id, address)[prompt_id]
     for o in history['outputs']:
         for node_id in history['outputs']:
             node_output = history['outputs'][node_id]
             videos_output = []
             if 'gifs' in node_output:
                 for video in node_output['gifs']:
-                    video_data = get_image(video['filename'], video['subfolder'], video['type'])
+                    video_data = get_image(video['filename'], video['subfolder'], video['type'], address)
                     videos_output.append(video_data)
             output_videos[node_id] = videos_output
 
@@ -469,10 +471,19 @@ def get_video(ws, prompt):
 async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
+    
+    SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
+    
+    if SERVER_ADDRESS is None:
+        await bot.send_message(chat_id=chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait for sometime and try again')
+        return
+    
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
     ws = websocket.WebSocket()
+    
     ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS, client_id))
+    SERVER_ADDRESS.busy(True)
     images = get_images(ws, workflow)
     videos = get_video(ws, workflow)
 
@@ -499,6 +510,8 @@ async def comfy(chat, prompts, cfg):
                 await bot.send_video(chat_id=chat.id, video=video, supports_streaming=True)
             except:
                 log.error("Error sending video")
+
+    SERVER_ADDRESS.busy(False)
 
 
 @bot.message_handler(commands=['help'])
