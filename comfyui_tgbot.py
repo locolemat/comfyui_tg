@@ -20,7 +20,12 @@ import re
 import io
 import asyncio
 import telebot
+from telebot import asyncio_filters
 from telebot.async_telebot import AsyncTeleBot
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.util import quick_markup
+from telebot.asyncio_storage import StateMemoryStorage
+from states import BotStates
 import random
 from PIL import Image
 from deep_translator import GoogleTranslator
@@ -41,7 +46,12 @@ with open('config.yaml') as f:
     SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
 
     TRANSLATE = config['bot']['TRANSLATE']
+    INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
     HELP_TEXT = config['bot']['HELP_TEXT']
+    START_TEXT = config['bot']['START_TEXT']
+    IMAGE_TO_VIDEO_TEXT = config['bot']['IMAGE_TO_VIDEO_TEXT']
+    IMAGE_PRICE = config['bot']['IMAGE_PRICE']
+    VIDEO_PRICE = config['bot']['VIDEO_PRICE']
     DENY_TEXT = config['bot']['DENY_TEXT']
     USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
 
@@ -154,7 +164,8 @@ def get_model(prompt):
 
 client_id = str(uuid.uuid4())
 
-bot = AsyncTeleBot(BOT_TOKEN)
+bot = AsyncTeleBot(BOT_TOKEN, state_storage=StateMemoryStorage())
+
 
 def cmt():
     return round(time.time() * 1000)
@@ -475,7 +486,7 @@ async def comfy(chat, prompts, cfg):
     SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
     
     if SERVER_ADDRESS is None:
-        await bot.send_message(chat_id=chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait for sometime and try again')
+        await bot.send_message(chat_id=chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait a bit and try again')
         return
     
     cfg['id'] = chat.id
@@ -493,6 +504,11 @@ async def comfy(chat, prompts, cfg):
 
             try:
                 await bot.send_photo(chat_id=chat.id, photo=image, caption=prompts)
+
+                user_config = read_config(chat.id)
+                user_config['tokens'] -= IMAGE_PRICE
+                update_config(chat.id, user_config)
+
             except:
                 log.error("Error sending photo")
 
@@ -508,6 +524,11 @@ async def comfy(chat, prompts, cfg):
 
             try:
                 await bot.send_video(chat_id=chat.id, video=video, supports_streaming=True)
+
+                user_config = read_config(chat.id)
+                user_config['tokens'] -= VIDEO_PRICE
+                update_config(chat.id, user_config)
+
             except:
                 log.error("Error sending video")
 
@@ -518,8 +539,24 @@ async def comfy(chat, prompts, cfg):
 @bot.message_handler(commands=['start'])
 async def start_message(message):
     add_config(message.chat)
+    markup = quick_markup({
+        'Text to Image': {'callback_data': 'txt2img'},
+        'Image to Video': {'callback_data': 'img2vid'}
+    }, row_width=2)
 
-    await bot.send_message(chat_id=message.chat.id, text=HELP_TEXT)
+    await bot.send_message(chat_id=message.chat.id, text=START_TEXT, reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('txt2img'))    
+async def callback_worker_text_to_image(call):
+    await bot.set_state(call.message.chat.id, BotStates.text_to_image)
+    await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('img2vid'))    
+async def callback_worker_image_to_video(call):
+    await bot.set_state(call.message.chat.id, BotStates.image_to_video)
+    await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT)
 
 
 @bot.message_handler(commands=['models'])
@@ -561,17 +598,19 @@ async def start_message(message):
         await bot.send_message(chat_id=message.chat.id, text='Style cleared')
 
 
-@bot.message_handler(content_types='text')
+@bot.message_handler(state=BotStates.text_to_image, content_types='text')
 async def message_reply(message):
+    await bot.delete_state(message.from_user.id, message.chat.id)
     prompt = message.text
     cfg = {}
-
+    
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
     await comfy(message.chat, message.text, cfg)
 
 
-@bot.message_handler(content_types='photo')
+@bot.message_handler(state=BotStates.image_to_video, content_types='photo')
 async def message_reply(message):
+    await bot.delete_state(message.from_user.id, message.chat.id)
     prompt = message.caption
     cfg = {}
 
@@ -638,7 +677,8 @@ def add_config(data: telebot.types.Chat) -> bool:
             user_data = {'id': data.id, 
                          'username': data.username, 
                          'first_name': data.first_name, 
-                         'last_name': data.last_name}
+                         'last_name': data.last_name,
+                         'tokens': INITIAL_TOKEN_AMOUNT}
 
             yaml.dump(user_data, f)
             return True
@@ -682,5 +722,6 @@ def update_config(user: int, data: dict) -> bool:
 log.info("Starting bot")
 
 if __name__ == '__main__':
+    bot.add_custom_filter(asyncio_filters.StateFilter(bot))
     asyncio.run(bot.infinity_polling())
 

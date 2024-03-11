@@ -7,8 +7,13 @@ network:
 
 bot:
   TRANSLATE: True
+  INITIAL_TOKEN_AMOUNT: 10
   DENY_TEXT: "Access denied"
   USER_CONFIGS_LOCATION: "user_configs"
+  START_TEXT: "Please, choose the type of prompt and what you want to generate:"
+  IMAGE_TO_VIDEO_TEXT: "Please, send an image from which you want a video to be generated in your next message"
+  VIDEO_PRICE: 5
+  IMAGE_PRICE: 1
   HELP_TEXT: "You can use text in any language to generate
 
 By default, the image is created in a resolution of 512x512 pixels
