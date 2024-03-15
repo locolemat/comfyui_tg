@@ -484,19 +484,17 @@ async def comfy(chat, prompts, cfg):
         return
     
     SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
-    
     if SERVER_ADDRESS is None:
         await bot.send_message(chat_id=chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait a bit and try again')
         return
-    
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
     ws = websocket.WebSocket()
-    
-    ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS, client_id))
+
+    ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS.address(), client_id))
     SERVER_ADDRESS.busy(True)
-    images = get_images(ws, workflow)
-    videos = get_video(ws, workflow)
+    images = get_images(ws, workflow, SERVER_ADDRESS.address())
+    videos = get_video(ws, workflow, SERVER_ADDRESS.address())
 
     for node_id in images:
         for image_data in images[node_id]:
