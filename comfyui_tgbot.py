@@ -125,7 +125,7 @@ if (config['models'] is not None): # Has models
                 'name': tmp[0],
                 'model_file': tmp[1]
                 })
-
+            
 
 def get_lora(prompt):
     lr = re.findall('\\#\\w+\\:?\\d*.?\\d*\\s', prompt)
@@ -538,65 +538,38 @@ async def comfy(chat, prompts, cfg):
 async def start_message(message):
     add_config(message.chat)
     markup = quick_markup({
-        'Text to Image': {'callback_data': 'txt2img'},
+        'Text to Video': {'callback_data': 'txt2vid'},
         'Image to Video': {'callback_data': 'img2vid'}
     }, row_width=2)
 
     await bot.send_message(chat_id=message.chat.id, text=START_TEXT, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('txt2img'))    
+@bot.callback_query_handler(func=lambda call: call.data.startswith('txt2vid'))    
 async def callback_worker_text_to_image(call):
-    await bot.set_state(call.message.chat.id, BotStates.text_to_image)
-    await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT)
+    await bot.set_state(call.message.chat.id, BotStates.text_aspect_ratio)
+
+    markup = quick_markup({
+        '1:1': {'callback_data': 'txt512_512'},
+        'Portrait (2:3)': {'callback_data': 'txt512_768'},
+        'Landscape (3:2)': {'callback_data': 'txt768_512'}
+    }, row_width=2)
+
+    await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT, reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('img2vid'))    
 async def callback_worker_image_to_video(call):
-    await bot.set_state(call.message.chat.id, BotStates.image_to_video)
-    await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT)
+    await bot.set_state(call.message.chat.id, BotStates.video_aspect_ratio)
+    markup = quick_markup({
+        '1:1': {'callback_data': 'vid512_512'},
+        'Portrait (2:3)': {'callback_data': 'vid512_768'},
+        'Landscape (3:2)': {'callback_data': 'vid768_512'}
+    }, row_width=2)
+    await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT, reply_markup=markup)
 
 
-@bot.message_handler(commands=['models'])
-async def start_message(message):
-    md = 'Use @model_name\n'
-    for m in models:
-        md = md + m['name'] + "\n"
-    await bot.send_message(chat_id=message.chat.id, text=md)
-
-
-@bot.message_handler(commands=['loras'])
-async def start_message(message):
-    ld = 'Use @lora_name or @lora_name:strength\n'
-    for l in loras:
-        ld = ld + l['name'] + "\n"
-    await bot.send_message(chat_id=message.chat.id, text=ld)
-
-
-
-@bot.message_handler(commands=['me'])
-async def start_message(message):
-    w = re.findall('\\d+\\.?\\d*', message.text)
-    if w:
-        chat_face[message.chat.id]['weight'] = w[0]
-        await bot.send_message(chat_id=message.chat.id, text='Set face weight')
-    else:
-        del chat_face[message.chat.id]
-        await bot.send_message(chat_id=message.chat.id, text='Face cleared')
-
-
-@bot.message_handler(commands=['style'])
-async def start_message(message):
-    w = re.findall('\\d+\\.?\\d*', message.text)
-    if w:
-        chat_style[message.chat.id]['weight'] = w[0]
-        await bot.send_message(chat_id=message.chat.id, text='Set style weight')
-    else:
-        del chat_style[message.chat.id]
-        await bot.send_message(chat_id=message.chat.id, text='Style cleared')
-
-
-@bot.message_handler(state=BotStates.text_to_image, content_types='text')
+@bot.message_handler(state=BotStates.text_to_video, content_types='text', func=lambda call: call.data.startswith('txt'))
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
     prompt = message.text
@@ -606,48 +579,48 @@ async def message_reply(message):
     await comfy(message.chat, message.text, cfg)
 
 
-@bot.message_handler(state=BotStates.image_to_video, content_types='photo')
-async def message_reply(message):
+@bot.message_handler(state=BotStates.image_to_video, content_types='photo', func=lambda call: call.data.startswith('vid'))
+async def message_reply(call):
     await bot.delete_state(message.from_user.id, message.chat.id)
     prompt = message.caption
     cfg = {}
-
+    
     img_id = message.photo[len(message.photo)-1].file_id
     tmp = (await bot.get_file(img_id))
     imgf = (await bot.download_file(tmp.file_path))
 
-    if ('/me' in prompt):
-        w = re.findall('\\d+\\.?\\d*', prompt)
-        if w:
-            weight = w[0]
-        else:
-            weight = "1.0"
+    # if ('/me' in prompt):
+    #     w = re.findall('\\d+\\.?\\d*', prompt)
+    #     if w:
+    #         weight = w[0]
+    #     else:
+    #         weight = "1.0"
 
-        fn = os.getcwd() + "/upload/face_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
-        with open(fn, 'wb') as new_file:
-            new_file.write(imgf)
-        chat_face[message.chat.id] = {'file' : fn, 'weight' : weight}
-        log.info("FACE:%s (%s %s)", message.chat.id, message.chat.first_name, message.chat.username)
-        with open('chat_face.pkl', 'wb') as f:
-            pickle.dump(chat_face, f)
-        await bot.send_message(chat_id=message.chat.id, text='Face image set. Use /face x.xx to set weight (0.5 for example)')
-        return
+    #     fn = os.getcwd() + "/upload/face_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
+    #     with open(fn, 'wb') as new_file:
+    #         new_file.write(imgf)
+    #     chat_face[message.chat.id] = {'file' : fn, 'weight' : weight}
+    #     log.info("FACE:%s (%s %s)", message.chat.id, message.chat.first_name, message.chat.username)
+    #     with open('chat_face.pkl', 'wb') as f:
+    #         pickle.dump(chat_face, f)
+    #     await bot.send_message(chat_id=message.chat.id, text='Face image set. Use /face x.xx to set weight (0.5 for example)')
+    #     return
 
-    if ('/style' in prompt):
-        w = re.findall('\\d+\\.?\\d*', prompt)
-        if w:
-            weight = w[0]
-        else:
-            weight = "1.0"
-        fn = os.getcwd() + "/upload/style_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
-        with open(fn, 'wb') as new_file:
-            new_file.write(imgf)    
-        chat_style[message.chat.id] = {'file' : fn, 'weight' : weight}
-        log.info("STYLE:%s (%s %s)", message.chat.id, message.chat.first_name, message.chat.username)
-        with open('chat_style.pkl', 'wb') as f:
-            pickle.dump(chat_style, f)
-        await bot.send_message(chat_id=message.chat.id, text='Style image set. Use /style x.xx to set weight (0.5 for example)')
-        return
+    # if ('/style' in prompt):
+    #     w = re.findall('\\d+\\.?\\d*', prompt)
+    #     if w:
+    #         weight = w[0]
+    #     else:
+    #         weight = "1.0"
+    #     fn = os.getcwd() + "/upload/style_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
+    #     with open(fn, 'wb') as new_file:
+    #         new_file.write(imgf)    
+    #     chat_style[message.chat.id] = {'file' : fn, 'weight' : weight}
+    #     log.info("STYLE:%s (%s %s)", message.chat.id, message.chat.first_name, message.chat.username)
+    #     with open('chat_style.pkl', 'wb') as f:
+    #         pickle.dump(chat_style, f)
+    #     await bot.send_message(chat_id=message.chat.id, text='Style image set. Use /style x.xx to set weight (0.5 for example)')
+    #     return
 
     fn = os.getcwd() + "/upload/source_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
     cfg['source_image'] = fn
@@ -723,3 +696,40 @@ if __name__ == '__main__':
     bot.add_custom_filter(asyncio_filters.StateFilter(bot))
     asyncio.run(bot.infinity_polling())
 
+# @bot.message_handler(commands=['models'])
+# async def start_message(message):
+#     md = 'Use @model_name\n'
+#     for m in models:
+#         md = md + m['name'] + "\n"
+#     await bot.send_message(chat_id=message.chat.id, text=md)
+
+
+# @bot.message_handler(commands=['loras'])
+# async def start_message(message):
+#     ld = 'Use @lora_name or @lora_name:strength\n'
+#     for l in loras:
+#         ld = ld + l['name'] + "\n"
+#     await bot.send_message(chat_id=message.chat.id, text=ld)
+
+
+
+# @bot.message_handler(commands=['me'])
+# async def start_message(message):
+#     w = re.findall('\\d+\\.?\\d*', message.text)
+#     if w:
+#         chat_face[message.chat.id]['weight'] = w[0]
+#         await bot.send_message(chat_id=message.chat.id, text='Set face weight')
+#     else:
+#         del chat_face[message.chat.id]
+#         await bot.send_message(chat_id=message.chat.id, text='Face cleared')
+
+
+# @bot.message_handler(commands=['style'])
+# async def start_message(message):
+#     w = re.findall('\\d+\\.?\\d*', message.text)
+#     if w:
+#         chat_style[message.chat.id]['weight'] = w[0]
+#         await bot.send_message(chat_id=message.chat.id, text='Set style weight')
+#     else:
+#         del chat_style[message.chat.id]
+#         await bot.send_message(chat_id=message.chat.id, text='Style cleared')

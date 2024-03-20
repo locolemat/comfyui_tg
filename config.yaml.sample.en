@@ -16,21 +16,8 @@ bot:
   IMAGE_PRICE: 1
   HELP_TEXT: "You can use text in any language to generate
 
-By default, the image is created in a resolution of 512x512 pixels
-
-In the prompt you can specify the size WIDTHxHEIGHT. For example - 1024x512
-
 To add a negative prompt, add it to the end of the message using the '|' separator.
-
-Commands:
-
-/models - list models
-
-/loras - list LoRAs
-
-/upscale .... - creates a high-resolution image
-
-/face .... - corrects facial defects"
+"
 
 comfyui:
   DEFAULT_MODEL: 'revAnimatedFp16_122.safetensors'
