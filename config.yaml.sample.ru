@@ -14,6 +14,7 @@ bot:
   IMAGE_TO_VIDEO_TEXT: ""
   VIDEO_PRICE: 5
   IMAGE_PRICE: 1
+  CHOOSE_ASPECT_RATIO: ""
   HELP_TEXT: "Для генерации можно использовать текст на русском языке
 
 По-умолчанию каритнка создаётся в разрешении 512x512 пикселей

@@ -53,6 +53,7 @@ with open('config.yaml') as f:
     IMAGE_PRICE = config['bot']['IMAGE_PRICE']
     VIDEO_PRICE = config['bot']['VIDEO_PRICE']
     DENY_TEXT = config['bot']['DENY_TEXT']
+    CHOOSE_ASPECT_RATIO = config['bot']['CHOOSE_ASPECT_RATIO']
     USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
 
     DEFAULT_MODEL = config['comfyui']['DEFAULT_MODEL']
@@ -165,7 +166,7 @@ def get_model(prompt):
 client_id = str(uuid.uuid4())
 
 bot = AsyncTeleBot(BOT_TOKEN, state_storage=StateMemoryStorage())
-
+aspect_ratios = {}
 
 def cmt():
     return round(time.time() * 1000)
@@ -548,46 +549,40 @@ async def start_message(message):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('txt2vid'))    
 async def callback_worker_text_to_image(call):
     await bot.set_state(call.message.chat.id, BotStates.text_aspect_ratio)
-
     markup = quick_markup({
-        '1:1': {'callback_data': 'txt512_512'},
-        'Portrait (2:3)': {'callback_data': 'txt512_768'},
-        'Landscape (3:2)': {'callback_data': 'txt768_512'}
+        '1:1': {'callback_data': 'txt512x512'},
+        'Portrait (2:3)': {'callback_data': 'txt512x768'},
+        'Landscape (3:2)': {'callback_data': 'txt768x512'}
     }, row_width=2)
 
-    await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT, reply_markup=markup)
+    await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('img2vid'))    
 async def callback_worker_image_to_video(call):
     await bot.set_state(call.message.chat.id, BotStates.video_aspect_ratio)
     markup = quick_markup({
-        '1:1': {'callback_data': 'vid512_512'},
-        'Portrait (2:3)': {'callback_data': 'vid512_768'},
-        'Landscape (3:2)': {'callback_data': 'vid768_512'}
+        '1:1': {'callback_data': 'vid512x512'},
+        'Portrait (2:3)': {'callback_data': 'vid512x768'},
+        'Landscape (3:2)': {'callback_data': 'vid768x512'}
     }, row_width=2)
-    await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT, reply_markup=markup)
+    await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
 
 
-@bot.message_handler(state=BotStates.text_to_video, content_types='text', func=lambda call: call.data.startswith('txt'))
-async def message_reply(message):
-    await bot.delete_state(message.from_user.id, message.chat.id)
-    prompt = message.text
-    cfg = {}
-    
-    log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
-    await comfy(message.chat, message.text, cfg)
-
-
-@bot.message_handler(state=BotStates.image_to_video, content_types='photo', func=lambda call: call.data.startswith('vid'))
+@bot.callback_query_handler(state=BotStates.text_aspect_ratio, func=lambda call: call.data.startswith('txt'))
 async def message_reply(call):
-    await bot.delete_state(message.from_user.id, message.chat.id)
-    prompt = message.caption
-    cfg = {}
-    
-    img_id = message.photo[len(message.photo)-1].file_id
-    tmp = (await bot.get_file(img_id))
-    imgf = (await bot.download_file(tmp.file_path))
+    await bot.set_state(call.message.chat.id, BotStates.text_to_video)
+    ratio = call.data.strip('txt')
+    aspect_ratios[call.message.chat.id] = ratio
+    await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT)
+
+
+@bot.callback_query_handler(state=BotStates.video_aspect_ratio, func=lambda call: call.data.startswith('vid'))
+async def message_reply(call):
+    await bot.set_state(call.message.chat.id, BotStates.image_to_video)
+    ratio = call.data.strip('txt')
+    aspect_ratios[call.message.chat.id] = ratio
+    await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT)
 
     # if ('/me' in prompt):
     #     w = re.findall('\\d+\\.?\\d*', prompt)
@@ -621,6 +616,35 @@ async def message_reply(call):
     #         pickle.dump(chat_style, f)
     #     await bot.send_message(chat_id=message.chat.id, text='Style image set. Use /style x.xx to set weight (0.5 for example)')
     #     return
+
+    
+
+
+@bot.message_handler(state=BotStates.text_to_video, content_types=['text'])
+async def message_reply(message):
+    await bot.delete_state(message.from_user.id, message.chat.id)
+
+    prompt = message.text + aspect_ratios[message.from_user.id]
+    aspect_ratios.pop(message.from_user.id)
+    cfg = {}
+
+    log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
+
+    await comfy(message.chat, message.text, cfg)
+
+
+@bot.message_handler(state=BotStates.image_to_video, content_types=['photo'])
+async def message_reply(message):
+    await bot.delete_state(message.from_user.id, message.chat.id)
+
+    prompt = message.caption + aspect_ratios[message.from_user.id]
+    aspect_ratios.pop(message.from_user.id)
+
+    cfg = {}
+    
+    img_id = message.photo[len(message.photo)-1].file_id
+    tmp = (await bot.get_file(img_id))
+    imgf = (await bot.download_file(tmp.file_path))
 
     fn = os.getcwd() + "/upload/source_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
     cfg['source_image'] = fn

@@ -14,6 +14,7 @@ bot:
   IMAGE_TO_VIDEO_TEXT: "Please, send an image from which you want a video to be generated in your next message"
   VIDEO_PRICE: 5
   IMAGE_PRICE: 1
+  CHOOSE_ASPECT_RATIO: "Please, choose desired aspect ratio for the video."
   HELP_TEXT: "You can use text in any language to generate
 
 To add a negative prompt, add it to the end of the message using the '|' separator.
