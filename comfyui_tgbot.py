@@ -40,6 +40,8 @@ from sanitize_filename import sanitize
 
 from server_address import ServerAddress, ServerAddressController
 from exception_handler import ErrHandler
+
+
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
@@ -499,8 +501,8 @@ async def comfy(chat, prompts, cfg):
 
     for node_id in images:
         for image_data in images[node_id]:
-            image = open(io.BytesIO(image_data),'rb')
-
+            # image = open(io.BytesIO(image_data),'rb')
+            image = image_data
             try:
                 await bot.send_photo(chat_id=chat.id, photo=image, caption=prompts)
 
