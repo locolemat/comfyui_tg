@@ -646,7 +646,7 @@ async def message_reply(message):
 
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
 
-    await comfy(message.chat, message.text, cfg)
+    asyncio.run(comfy(message.chat, message.text, cfg))
 
 
 @bot.message_handler(state=BotStates.image_to_video, content_types=['photo'])
