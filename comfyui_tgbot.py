@@ -39,7 +39,7 @@ import urllib.parse
 from sanitize_filename import sanitize
 
 from server_address import ServerAddress, ServerAddressController
-
+from exception_handler import ErrHandler
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
@@ -165,7 +165,7 @@ def get_model(prompt):
 
 client_id = str(uuid.uuid4())
 
-bot = AsyncTeleBot(BOT_TOKEN, state_storage=StateMemoryStorage())
+bot = AsyncTeleBot(BOT_TOKEN, state_storage=StateMemoryStorage(), exception_handler=ErrHandler())
 aspect_ratios = {}
 
 def cmt():
