@@ -645,8 +645,8 @@ async def message_reply(message):
     cfg = {}
 
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
-
-    asyncio.run(comfy(message.chat, message.text, cfg))
+    
+    await comfy(message.chat, message.text, cfg)
 
 
 @bot.message_handler(state=BotStates.image_to_video, content_types=['photo'])
@@ -670,7 +670,7 @@ async def message_reply(message):
 
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
-    asyncio.run(comfy(message.chat, prompt, cfg))
+    await comfy(message.chat, message.text, cfg)
 
 
 def add_config(data: telebot.types.Chat) -> bool:
