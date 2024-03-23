@@ -77,6 +77,15 @@ with open('config.yaml') as f:
     CLIP_SKIP = config['comfyui']['CLIP_SKIP']
     #ALLOW_DIRECT_LORA = config['comfyui']['ALLOW_DIRECT_LORA']
 
+
+filtered_words = []
+
+if os.path.exists('./word_filter.yaml'):
+    with open('word_filter.yaml', encoding='utf-8') as f:
+        words = yaml.safe_load(f)
+        for word in words['words']:
+            filtered_words.append(word)
+
 if not os.path.exists('upload'):
     log.info("Creating upload folder")
     os.makedirs('upload')
@@ -625,6 +634,11 @@ async def message_reply(call):
 @bot.message_handler(state=BotStates.text_to_video, content_types=['text'])
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
+    
+    for word in message.text.split():
+        if word in filtered_words:
+            await bot.send_message(chat_id=message.chat.id, text='Vulgar language is unacceptable.')
+            return
 
     prompt = message.text + aspect_ratios[message.from_user.id]
     aspect_ratios.pop(message.from_user.id)
