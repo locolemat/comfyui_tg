@@ -505,7 +505,16 @@ async def comfy(chat, prompts, cfg):
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
 
-    SERVER_ADDRESS = 
+    SERVERS = SERVER_ADDRESSES.servers()
+    SERVER_ADDRESS = None
+
+    for SERVER in SERVERS:
+        if SERVER.get_queue().find_queue_item_by_username(chat.id):
+            SERVER_ADDRESS = SERVER
+
+    
+    if SERVER_ADDRESS is None:
+        await bot.send_message(chat_id=chat.id, text="There's been a problem trying to find your place in a queue. Try again later")
 
 
     async with aiohttp.ClientSession() as session:
@@ -529,6 +538,7 @@ async def comfy(chat, prompts, cfg):
             except:
                 log.error("Error sending video")
 
+    SERVER_ADDRESS.get_queue().advance_queue()
     await ws.close()
 
 @bot.message_handler(commands=['help'])
