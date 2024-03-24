@@ -42,13 +42,14 @@ import urllib.parse
 from sanitize_filename import sanitize
 
 from server_address import ServerAddress, ServerAddressController
+from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
 
 
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
-    SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
+    SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS, Queue()) for ADDRESS in config['network']['SERVER_ADDRESSES']])
 
     TRANSLATE = config['bot']['TRANSLATE']
     INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
@@ -501,17 +502,15 @@ async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
 
-    SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
-    if SERVER_ADDRESS is None:
-        await bot.send_message(chat_id=chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait a bit and try again')
-        return
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
+
+    SERVER_ADDRESS = 
+
 
     async with aiohttp.ClientSession() as session:
         ws = await session.ws_connect(f"ws://{SERVER_ADDRESS.address()}/ws?clientId={client_id}")
 
-        SERVER_ADDRESS.busy(True)
         images = await get_images(ws, workflow, SERVER_ADDRESS.address(), session)
         videos = await get_video(ws, workflow, SERVER_ADDRESS.address(), session)
 
@@ -530,13 +529,25 @@ async def comfy(chat, prompts, cfg):
             except:
                 log.error("Error sending video")
 
-    SERVER_ADDRESS.busy(False)
     await ws.close()
 
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['generate'])
 async def start_message(message):
     add_config(message.chat)
+    SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
+
+    item = QueueItem(SERVER_ADDRESS, message.chat.id)
+    SERVER_ADDRESS.get_queue().add_to_queue(item)
+
+    queue_position = SERVER_ADDRESS.get_queue().determine_pos(item)
+    if queue_position != 0:
+        await bot.send_message(chat_id=message.chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait a bit and try again.')
+        await bot.send_message(chat_id=message.chat.id, text=f'Your current queue position is {queue_position}. We will notify you when that changes.')
+        return
+
+    
+
     markup = quick_markup({
         'Text to Image': {'callback_data': 'txt2vid'},
         # 'Text to Video': {'callback_data': 'txt2vid'},

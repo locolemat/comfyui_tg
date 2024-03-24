@@ -29,6 +29,14 @@ class Queue:
         return len(self.__items)
 
 
+    def find_queue_item_by_username(self, username: str) -> QueueItem:
+        for index in range(len(self.__items)):
+            if self.__items[index].get_user() == username:
+                return self.__items[index]
+
+        return None
+    
+    
     def add_to_queue(self, item: QueueItem):
         self.__items.append(item)
 
