@@ -42,3 +42,10 @@ class ServerAddressController:
 
     def add_server(self, server: ServerAddress):
         self.__servers.append(server)
+
+
+    def find_shortest_queue(self) -> Queue:
+        queues = [server.get_queue() for server in self.__servers]
+        queues_lengths = {queue: queue.get_length() for queue in queues}
+
+        return sorted(queues_lengths.items(), key=lambda x: x[1])[0]

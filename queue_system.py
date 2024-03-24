@@ -25,6 +25,10 @@ class Queue:
         self.__items = []
 
 
+    def get_length(self) -> int:
+        return len(self.__items)
+
+
     def add_to_queue(self, item: QueueItem):
         self.__items.append(item)
 
