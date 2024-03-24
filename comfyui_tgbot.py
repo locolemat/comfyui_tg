@@ -193,6 +193,10 @@ with open('workflows/wf_upscale.json') as json_file:
     wf_upscale = json.load(json_file)
 
 
+async def notify_of_queue_change(queue: Queue):
+    for item in queue.get_items():
+        await bot.send_message(chat_id=item.get_user, text=f'Your position in the queue is now {queue.determine_pos(item)}!')
+
 async def check_access(id):
     if (config['whitelist'] is None): # Allow all, whitelist is empty
         log.info("Access allowed for %s, empty whitelist in config yaml", id)
@@ -539,6 +543,8 @@ async def comfy(chat, prompts, cfg):
                 log.error("Error sending video")
 
     SERVER_ADDRESS.get_queue().advance_queue()
+
+    await notify_of_queue_change(SERVER_ADDRESS.get_queue())
     await ws.close()
 
 @bot.message_handler(commands=['help'])
