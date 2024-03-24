@@ -1,7 +1,6 @@
-from server_address import ServerAddress
 
 class QueueItem:
-    def __init__(self, address: ServerAddress, user: str):
+    def __init__(self, address, user: str):
         self.__address = address
         self.__user = user
 
@@ -10,7 +9,7 @@ class QueueItem:
         return self.__user
     
 
-    def get_address(self) -> ServerAddress:
+    def get_address(self):
         return self.__address
     
 
@@ -18,6 +17,14 @@ class QueueItem:
         if self.__address.address() == other.__address.address() and self.__user == other.__user:
             return True
         return False
+    
+
+    def __str__(self):
+        return f'{self.__address} {self.__user}' 
+    
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Queue:
