@@ -19,6 +19,10 @@ class ServerAddress:
             self.__address = address
         else:
             return self.__address
+        
+
+    def get_queue(self) -> Queue:
+        return self.__queue
 
 
 class ServerAddressController:
