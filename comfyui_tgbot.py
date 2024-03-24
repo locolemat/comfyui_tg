@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+import io
 import logging
 import os, sys
 import coloredlogs
+import aiohttp
+import asyncio
 
 logging.basicConfig(filename='bot.log', encoding='utf-8')
 
@@ -182,7 +185,7 @@ aspect_ratios = {}
 def cmt():
     return round(time.time() * 1000)
 
-with open('workflows/wf_noupscale.json') as json_file:
+with open('workflows/workflow_api.json') as json_file:
     wf_noupscale = json.load(json_file)
 
 with open('workflows/wf_upscale.json') as json_file:
@@ -320,98 +323,98 @@ def setup_workflow(prompt, config):
     prompt, negative_prompt, config = configure(prompt, config)
     
     for node in workflow:
-        if ("ckpt_name" in workflow[node]['inputs']):
-            workflow[node]['inputs']['ckpt_name'] = config['model']['model_file']
+        # if ("ckpt_name" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['ckpt_name'] = config['model']['model_file']
 
-        if ("vae_name" in workflow[node]['inputs']):
-            workflow[node]['inputs']['vae_name'] = DEFAULT_VAE
+        # if ("vae_name" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['vae_name'] = DEFAULT_VAE
 
-        if ("control_net_name" in workflow[node]['inputs']):
-            workflow[node]['inputs']['control_net_name'] = DEFAULT_CONTROLNET
+        # if ("control_net_name" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['control_net_name'] = DEFAULT_CONTROLNET
 
-        if ("strength" in workflow[node]['inputs']):
-            if (workflow[node]['class_type'] == 'ControlNetApply'):
-               workflow[node]['inputs']['strength'] = config['cn_strength']
+        # if ("strength" in workflow[node]['inputs']):
+        #     if (workflow[node]['class_type'] == 'ControlNetApply'):
+        #        workflow[node]['inputs']['strength'] = config['cn_strength']
 
-        if ("weight" in workflow[node]['inputs']):
-            if (workflow[node]['class_type'] == 'IPAdapterApply'): # face-5 style-31
-                if (node == "5"): #face
-                    if (config['face']):
-                        workflow[node]['inputs']['weight'] = config['face_weight']
-                    else:
-                        workflow[node]['inputs']['weight'] = 0
-                if (node == "31"): #style
-                    if (config['style']):
-                        workflow[node]['inputs']['weight'] = config['style_weight']
-                    else:
-                        workflow[node]['inputs']['weight'] = 0
+        # if ("weight" in workflow[node]['inputs']):
+        #     if (workflow[node]['class_type'] == 'IPAdapterApply'): # face-5 style-31
+        #         if (node == "5"): #face
+        #             if (config['face']):
+        #                 workflow[node]['inputs']['weight'] = config['face_weight']
+        #             else:
+        #                 workflow[node]['inputs']['weight'] = 0
+        #         if (node == "31"): #style
+        #             if (config['style']):
+        #                 workflow[node]['inputs']['weight'] = config['style_weight']
+        #             else:
+        #                 workflow[node]['inputs']['weight'] = 0
 
-        if ("width" in workflow[node]['inputs']):
-            workflow[node]['inputs']['width'] = config['width']
+        # if ("width" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['width'] = config['width']
 
-        if ("height" in workflow[node]['inputs']):
-            workflow[node]['inputs']['height'] = config['height']
+        # if ("height" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['height'] = config['height']
 
-        if ("seed" in workflow[node]['inputs']):
-            workflow[node]['inputs']['seed'] = config['seed']
+        # if ("seed" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['seed'] = config['seed']
 
-        if ("noise_seed" in workflow[node]['inputs']):
-            workflow[node]['inputs']['noise_seed'] = config['seed']
+        # if ("noise_seed" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['noise_seed'] = config['seed']
 
-        if ("sampler_name" in workflow[node]['inputs']):
-            workflow[node]['inputs']['sampler_name'] = SAMPLER
+        # if ("sampler_name" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['sampler_name'] = SAMPLER
 
-        if ("scheduler" in workflow[node]['inputs']):
-            workflow[node]['inputs']['scheduler'] = SCHEDULER
+        # if ("scheduler" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['scheduler'] = SCHEDULER
 
-        if ("steps" in workflow[node]['inputs']):
-            workflow[node]['inputs']['steps'] = config['steps']
+        # if ("steps" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['steps'] = config['steps']
             
-        if ("stop_at_clip_layer" in workflow[node]['inputs']):
-            workflow[node]['inputs']['stop_at_clip_layer'] = CLIP_SKIP
+        # if ("stop_at_clip_layer" in workflow[node]['inputs']):
+        #     workflow[node]['inputs']['stop_at_clip_layer'] = CLIP_SKIP
 
 
         if ("text" in workflow[node]['inputs']):
             if (workflow[node]['inputs']['text'] == 'positive prompt'):
                workflow[node]['inputs']['text'] = prompt
 
-        if ("text" in workflow[node]['inputs']):
-            if (workflow[node]['inputs']['text'] == 'negative prompt'):
-               workflow[node]['inputs']['text'] = negative_prompt
+        # if ("text" in workflow[node]['inputs']):
+        #     if (workflow[node]['inputs']['text'] == 'negative prompt'):
+        #        workflow[node]['inputs']['text'] = negative_prompt
 
-        if ("image" in workflow[node]['inputs']):
-            if (workflow[node]['inputs']['image'] == 'source image'):
-               workflow[node]['inputs']['image'] = config['source_image']
+        # if ("image" in workflow[node]['inputs']):
+        #     if (workflow[node]['inputs']['image'] == 'source image'):
+        #        workflow[node]['inputs']['image'] = config['source_image']
 
-            if (workflow[node]['inputs']['image'] == 'face image'):
-               workflow[node]['inputs']['image'] = config['face_image']
+        #     if (workflow[node]['inputs']['image'] == 'face image'):
+        #        workflow[node]['inputs']['image'] = config['face_image']
 
-            if (workflow[node]['inputs']['image'] == 'style image'):
-               workflow[node]['inputs']['image'] = config['style_image']
+        #     if (workflow[node]['inputs']['image'] == 'style image'):
+        #        workflow[node]['inputs']['image'] = config['style_image']
 
-        if ("model_name" in workflow[node]['inputs']):
-            if (workflow[node]['class_type'] == 'UpscaleModelLoader'):
-               workflow[node]['inputs']['model_name'] = DEFAULT_UPSCALER
+        # if ("model_name" in workflow[node]['inputs']):
+        #     if (workflow[node]['class_type'] == 'UpscaleModelLoader'):
+        #        workflow[node]['inputs']['model_name'] = DEFAULT_UPSCALER
         
-        if ("ratio" in workflow[node]['inputs']):
-            if (workflow[node]['class_type'] == 'TomePatchModel'):
-               workflow[node]['inputs']['ratio'] = TOKEN_MERGE_RATIO
+        # if ("ratio" in workflow[node]['inputs']):
+        #     if (workflow[node]['class_type'] == 'TomePatchModel'):
+        #        workflow[node]['inputs']['ratio'] = TOKEN_MERGE_RATIO
 
-        if ("lora_name" in workflow[node]['inputs']):
-            if config['lora']:
-                workflow[node]['inputs']['lora_name'] = config['lora']['lora_file']
-                workflow[node]['inputs']['strength_model'] = config['lora']['strength']
-                workflow[node]['inputs']['strength_clip'] = 1
-            else:
-                workflow[node]['inputs']['lora_name'] = 'default_lora.safetensors'
-                workflow[node]['inputs']['strength_model'] = 0
-                workflow[node]['inputs']['strength_clip'] = 0
+        # if ("lora_name" in workflow[node]['inputs']):
+        #     if config['lora']:
+        #         workflow[node]['inputs']['lora_name'] = config['lora']['lora_file']
+        #         workflow[node]['inputs']['strength_model'] = config['lora']['strength']
+        #         workflow[node]['inputs']['strength_clip'] = 1
+        #     else:
+        #         workflow[node]['inputs']['lora_name'] = 'default_lora.safetensors'
+        #         workflow[node]['inputs']['strength_model'] = 0
+        #         workflow[node]['inputs']['strength_clip'] = 0
 
-        if ("bbox_threshold" in workflow[node]['inputs']):
-            if config['facefix']:
-                workflow[node]['inputs']['bbox_threshold'] = 0.75
-            else:
-                workflow[node]['inputs']['bbox_threshold'] = 1
+        # if ("bbox_threshold" in workflow[node]['inputs']):
+        #     if config['facefix']:
+        #         workflow[node]['inputs']['bbox_threshold'] = 0.75
+        #     else:
+        #         workflow[node]['inputs']['bbox_threshold'] = 1
 
 #    print(json.dumps(workflow, indent=2))
 
@@ -424,25 +427,22 @@ def queue_prompt(prompt, address):
     return json.loads(urllib.request.urlopen(req).read())
 
 
-def get_image(filename, subfolder, folder_type, address):
+async def get_image(filename, subfolder, folder_type, address, session):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
     url_values = urllib.parse.urlencode(data)
-    with urllib.request.urlopen("http://{}/view?{}".format(address, url_values)) as response:
-        return response.read()
+    async with session.get(f"http://{address}/view?{url_values}") as response:
+        return await response.read()
 
+async def get_history(prompt_id, address, session):
+    async with session.get(f"http://{address}/history/{prompt_id}") as response:
+        return await response.json()
 
-def get_history(prompt_id, address):
-    with urllib.request.urlopen("http://{}/history/{}".format(address, prompt_id)) as response:
-        return json.loads(response.read())
-
-
-def get_images(ws, prompt, address):
+async def get_images(ws, prompt, address, session):
     prompt_id = queue_prompt(prompt, address)['prompt_id']
     output_images = {}
-    while True:
-        out = ws.recv()
-        if isinstance(out, str):
-            message = json.loads(out)
+    async for out in ws:
+        if out is not None:
+            message = json.loads(out.data)
             if message['type'] == 'executing':
                 data = message['data']
                 if data['node'] is None and data['prompt_id'] == prompt_id:
@@ -450,27 +450,29 @@ def get_images(ws, prompt, address):
         else:
             continue
 
-    history = get_history(prompt_id, address)[prompt_id]
-    for o in history['outputs']:
-        for node_id in history['outputs']:
-            node_output = history['outputs'][node_id]
-            images_output = []
-            if 'images' in node_output:
-                for image in node_output['images']:
-                    image_data = get_image(image['filename'], image['subfolder'], image['type'], address)
-                    images_output.append(image_data)
-            output_images[node_id] = images_output
+    async with aiohttp.ClientSession() as session:
+        history = await get_history(prompt_id, address, session)
+        history = history[prompt_id]
+        for o in history['outputs']:
+            for node_id in history['outputs']:
+                node_output = history['outputs'][node_id]
+                images_output = []
+                if 'images' in node_output:
+                    print('there are images in node_output')
+                    for image in node_output['images']:
+                        print('there are definitely images in node_output')
+                        image_data = await get_image(image['filename'], image['subfolder'], image['type'], address, session)
+                        images_output.append(image_data)
+                output_images[node_id] = images_output
 
     return output_images
 
-
-def get_video(ws, prompt, address):
+async def get_video(ws, prompt, address, session):
     prompt_id = queue_prompt(prompt, address)['prompt_id']
     output_videos = {}
-    while True:
-        out = ws.recv()
-        if isinstance(out, str):
-            message = json.loads(out)
+    async for out in ws:
+        if out is not None:
+            message = json.loads(out.data)
             if message['type'] == 'executing':
                 data = message['data']
                 if data['node'] is None and data['prompt_id'] == prompt_id:
@@ -478,57 +480,43 @@ def get_video(ws, prompt, address):
         else:
             continue
 
-    history = get_history(prompt_id, address)[prompt_id]
-    for o in history['outputs']:
-        for node_id in history['outputs']:
-            node_output = history['outputs'][node_id]
-            videos_output = []
-            if 'gifs' in node_output:
-                for video in node_output['gifs']:
-                    video_data = get_image(video['filename'], video['subfolder'], video['type'], address)
-                    videos_output.append(video_data)
-            output_videos[node_id] = videos_output
+    async with aiohttp.ClientSession() as session:
+        history = await get_history(prompt_id, address, session)
+        history = history[prompt_id]
+        for o in history['outputs']:
+            for node_id in history['outputs']:
+                node_output = history['outputs'][node_id]
+                videos_output = []
+                if 'gifs' in node_output:
+                    print('there are gifs in node_output')
+                    for video in node_output['gifs']:
+                        print('there definitely are gifs in node_output')
+                        video_data = await get_image(video['filename'], video['subfolder'], video['type'], address, session)
+                        videos_output.append(video_data)
+                output_videos[node_id] = videos_output
 
     return output_videos
 
 async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
-    
+
     SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
     if SERVER_ADDRESS is None:
         await bot.send_message(chat_id=chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait a bit and try again')
         return
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
-    ws = websocket.WebSocket()
 
-    ws.connect("ws://{}/ws?clientId={}".format(SERVER_ADDRESS.address(), client_id))
-    SERVER_ADDRESS.busy(True)
-    images = get_images(ws, workflow, SERVER_ADDRESS.address())
-    videos = get_video(ws, workflow, SERVER_ADDRESS.address())
+    async with aiohttp.ClientSession() as session:
+        ws = await session.ws_connect(f"ws://{SERVER_ADDRESS.address()}/ws?clientId={client_id}")
 
-    for node_id in images:
-        for image_data in images[node_id]:
-            # image = open(io.BytesIO(image_data),'rb')
-            image = image_data
-            try:
-                await bot.send_photo(chat_id=chat.id, photo=image, caption=prompts)
-
-                user_config = read_config(chat.id)
-                user_config['tokens'] -= IMAGE_PRICE
-                update_config(chat.id, user_config)
-
-            except:
-                log.error("Error sending photo")
-
-            tmpn = "generated/img_" + str(chat.id) + "_" + sanitize(prompts[0:100]) + "_" + str(cmt()) + ".png"
-            png = Image.open(io.BytesIO(image_data))
-            png.save(tmpn)
-            pd = open(tmpn, 'rb')
-            await bot.send_document(chat_id=chat.id, document=pd)
+        SERVER_ADDRESS.busy(True)
+        images = await get_images(ws, workflow, SERVER_ADDRESS.address(), session)
+        videos = await get_video(ws, workflow, SERVER_ADDRESS.address(), session)
 
     for node_id in videos:
+        print('node_id_video: {node_id}')
         for video_data in videos[node_id]:
             video = video_data
 
@@ -543,15 +531,16 @@ async def comfy(chat, prompts, cfg):
                 log.error("Error sending video")
 
     SERVER_ADDRESS.busy(False)
-
+    await ws.close()
 
 @bot.message_handler(commands=['help'])
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['generate'])
 async def start_message(message):
     add_config(message.chat)
     markup = quick_markup({
-        'Text to Video': {'callback_data': 'txt2vid'},
-        'Image to Video': {'callback_data': 'img2vid'}
+        'Text to Image': {'callback_data': 'txt2vid'},
+        # 'Text to Video': {'callback_data': 'txt2vid'},
+        # 'Image to Video': {'callback_data': 'img2vid'}
     }, row_width=2)
 
     await bot.send_message(chat_id=message.chat.id, text=START_TEXT, reply_markup=markup)
@@ -562,8 +551,8 @@ async def callback_worker_text_to_image(call):
     await bot.set_state(call.message.chat.id, BotStates.text_aspect_ratio)
     markup = quick_markup({
         '1:1': {'callback_data': 'txt512x512'},
-        'Portrait (2:3)': {'callback_data': 'txt512x768'},
-        'Landscape (3:2)': {'callback_data': 'txt768x512'}
+        # 'Portrait (2:3)': {'callback_data': 'txt512x768'},
+        # 'Landscape (3:2)': {'callback_data': 'txt768x512'}
     }, row_width=2)
 
     await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
@@ -574,8 +563,8 @@ async def callback_worker_image_to_video(call):
     await bot.set_state(call.message.chat.id, BotStates.video_aspect_ratio)
     markup = quick_markup({
         '1:1': {'callback_data': 'vid512x512'},
-        'Portrait (2:3)': {'callback_data': 'vid512x768'},
-        'Landscape (3:2)': {'callback_data': 'vid768x512'}
+        # 'Portrait (2:3)': {'callback_data': 'vid512x768'},
+        # 'Landscape (3:2)': {'callback_data': 'vid768x512'}
     }, row_width=2)
     await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
 
@@ -645,7 +634,7 @@ async def message_reply(message):
     cfg = {}
 
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
-    
+
     await comfy(message.chat, message.text, cfg)
 
 
@@ -670,7 +659,7 @@ async def message_reply(message):
 
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
-    await comfy(message.chat, message.text, cfg)
+    asyncio.run(comfy(message.chat, prompt, cfg))
 
 
 def add_config(data: telebot.types.Chat) -> bool:
