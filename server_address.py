@@ -1,7 +1,10 @@
+from queue_system import Queue
+
 class ServerAddress:
-    def __init__(self, address: str, busy: bool = False):
+    def __init__(self, address: str, queue: Queue, busy: bool = False):
         self.__address = address
         self.__busy = busy
+        self.__queue = queue
 
     
     def busy(self, busy: bool | None = None) -> bool | None :
@@ -35,8 +38,3 @@ class ServerAddressController:
 
     def add_server(self, server: ServerAddress):
         self.__servers.append(server)
-
-
-
-
-
