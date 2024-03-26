@@ -195,7 +195,10 @@ with open('workflows/wf_upscale.json') as json_file:
 
 async def notify_of_queue_change(queue: Queue):
     for item in queue.get_items():
-        await bot.send_message(chat_id=item.get_user, text=f'Your position in the queue is now {queue.determine_pos(item)}!')
+        await bot.send_message(chat_id=item.get_user(), text=f'Your position in the queue is now {queue.determine_pos(item)}!')
+        if queue.determine_pos(item) == 1:
+            await bot.send_message(chat_id=item.get_user(), text=f"It's your turn to generate now! Please enter a prompt")
+            await bot.set_state(call.message.chat.id, BotStates.text_to_video)
 
 async def check_access(id):
     if (config['whitelist'] is None): # Allow all, whitelist is empty

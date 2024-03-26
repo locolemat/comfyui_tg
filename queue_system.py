@@ -62,6 +62,10 @@ class Queue:
                 return index
             
         return None
+    
+
+    def __str__(self):
+        return str(self.__items)
 
     
     
