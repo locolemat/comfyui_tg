@@ -198,7 +198,7 @@ async def notify_of_queue_change(queue: Queue):
         await bot.send_message(chat_id=item.get_user(), text=f'Your position in the queue is now {queue.determine_pos(item)}!')
         if queue.determine_pos(item) == 1:
             await bot.send_message(chat_id=item.get_user(), text=f"It's your turn to generate now! Please enter a prompt")
-            await bot.set_state(call.message.chat.id, BotStates.text_to_video)
+            await bot.set_state(item.get_user(), BotStates.text_aspect_ratio)
 
 async def check_access(id):
     if (config['whitelist'] is None): # Allow all, whitelist is empty
