@@ -585,7 +585,10 @@ async def start_message(message):
     for SERVER in SERVERS:
         queue_item = SERVER.get_queue().find_queue_item_by_username(message.chat.id)
         if queue_item:
-            await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA is already hard at work bringing your masterpiece to life!")
+            if SERVER.get_queue().determine_pos(queue_item) == 0:
+                await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA is already hard at work bringing your masterpiece to life!")
+            else:
+                await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA has queued up your prompt and will begin work on it shortly. We'll notify you when that happens.")
             return
 
 
