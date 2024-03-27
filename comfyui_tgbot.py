@@ -100,6 +100,8 @@ if not os.path.exists('generated'):
 
 if (config['whitelist'] is None): # Allow all, whitelist is empty
     log.warning("Whitelist is empty, all users allowed to access this bot! Modify config.yaml")
+else:
+    whitelist = config['whitelist']
 
 if os.path.exists('chat_face.pkl'):
     with open('chat_face.pkl', 'rb') as f:
@@ -206,13 +208,13 @@ async def notify_of_queue_change(queue: Queue):
             
 
 async def check_access(id):
-    if (config['whitelist'] is None): # Allow all, whitelist is empty
+    if (whitelist is None): # Allow all, whitelist is empty
         log.info("Access allowed for %s, empty whitelist in config yaml", id)
         await bot.send_message(chat_id=id, text="Join AIDA's chat: https://t.me/videogenerationai")
         
         return True
 
-    if (id in config['whitelist']):
+    if (id in whitelist):
         log.info("Access allowed for %s, user in whitelist", id)
         return True
 
@@ -567,6 +569,14 @@ async def comfy(chat, prompts, cfg):
 
     await notify_of_queue_change(SERVER_ADDRESS.get_queue())
     await ws.close()
+
+
+@bot.chat_member_handler()
+async def chat_m(message):
+    new = message.new_chat_member
+    if new.status == "member":
+        whitelist.append(new.user.id)
+
 
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['generate'])
