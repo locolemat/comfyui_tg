@@ -1,13 +1,17 @@
 
 class QueueItem:
-    def __init__(self, address, user: str, prompt: str):
+    def __init__(self, address, user: int, prompt: str, username: str):
         self.__address = address
         self.__user = user
         self.__prompt = prompt
+        self.__username = username
 
     
-    def get_user(self) -> str:
+    def get_user(self) -> int:
         return self.__user
+    
+    def get_username(self) -> str:
+        return self.__username
     
 
     def get_address(self):

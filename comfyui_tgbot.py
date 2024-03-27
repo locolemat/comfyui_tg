@@ -25,7 +25,7 @@ import asyncio
 import telebot
 from telebot import asyncio_filters
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Chat
 from telebot.util import quick_markup
 from telebot.asyncio_storage import StateMemoryStorage
 from states import BotStates
@@ -197,9 +197,12 @@ async def notify_of_queue_change(queue: Queue):
     for item in queue.get_items():
         await bot.send_message(chat_id=item.get_user(), text=f'Your position in the queue is now {queue.determine_pos(item)}!')
         if queue.determine_pos(item) == 0:
-            await bot.send_message(chat_id=item.get_user(), text=f"It's your turn to generate now!")
-            await bot.set_state(item.get_user(), BotStates.text_aspect_ratio)
-            await comfy(item.get_user(), item.get_prompt(), {})
+            chat = Chat(id=item.get_user(), type='private', username=item.get_username())
+
+            await bot.send_message(chat_id=chat.id, text=f"It's your turn to generate now!")
+            await bot.set_state(chat.id, BotStates.text_aspect_ratio)
+            
+            await comfy(chat, item.get_prompt(), {})
             
 
 async def check_access(id):
@@ -524,7 +527,7 @@ async def comfy(chat, prompts, cfg):
     if SERVER_ADDRESS is None:
         SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
 
-        queue_item = QueueItem(SERVER_ADDRESS, chat.id, prompts)
+        queue_item = QueueItem(SERVER_ADDRESS, chat.id, prompts, chat.username)
         queue = SERVER_ADDRESS.get_queue()
         queue.add_to_queue(queue_item)
     
