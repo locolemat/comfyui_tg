@@ -468,9 +468,7 @@ async def get_images(ws, prompt, address, session):
                 node_output = history['outputs'][node_id]
                 images_output = []
                 if 'images' in node_output:
-                    print('there are images in node_output')
                     for image in node_output['images']:
-                        print('there are definitely images in node_output')
                         image_data = await get_image(image['filename'], image['subfolder'], image['type'], address, session)
                         images_output.append(image_data)
                 output_images[node_id] = images_output
@@ -498,9 +496,7 @@ async def get_video(ws, prompt, address, session):
                 node_output = history['outputs'][node_id]
                 videos_output = []
                 if 'gifs' in node_output:
-                    print('there are gifs in node_output')
                     for video in node_output['gifs']:
-                        print('there definitely are gifs in node_output')
                         video_data = await get_image(video['filename'], video['subfolder'], video['type'], address, session)
                         videos_output.append(video_data)
                 output_videos[node_id] = videos_output
