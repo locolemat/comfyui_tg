@@ -203,10 +203,13 @@ async def notify_of_queue_change(queue: Queue):
 async def check_access(id):
     if (config['whitelist'] is None): # Allow all, whitelist is empty
         log.info("Access allowed for %s, empty whitelist in config yaml", id)
+        await bot.send_message(chat_id=id, text="Join AIDA's chat: https://t.me/videogenerationai")
+        
         return True
 
     if (id in config['whitelist']):
         log.info("Access allowed for %s, user in whitelist", id)
+        await bot.send_message(chat_id=id, text="Join AIDA's chat: https://t.me/videogenerationai")
         return True
 
     await bot.send_message(chat_id=id, text=DENY_TEXT)
