@@ -186,7 +186,7 @@ aspect_ratios = {}
 def cmt():
     return round(time.time() * 1000)
 
-with open('workflows/workflow_api.json') as json_file:
+with open('workflows/t2v.json') as json_file:
     wf_noupscale = json.load(json_file)
 
 with open('workflows/wf_upscale.json') as json_file:
