@@ -511,6 +511,10 @@ async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
 
+    SERVERS = SERVER_ADDRESSES.servers()
+    SERVER_ADDRESS = None
+
+    
     for SERVER in SERVERS:
         queue_item = SERVER.get_queue().find_queue_item_by_username(chat.id)
         if queue_item:
@@ -537,11 +541,6 @@ async def comfy(chat, prompts, cfg):
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
 
-    SERVERS = SERVER_ADDRESSES.servers()
-    SERVER_ADDRESS = None
-
-    
-    
 
     async with aiohttp.ClientSession() as session:
         ws = await session.ws_connect(f"ws://{SERVER_ADDRESS.address()}/ws?clientId={client_id}")
