@@ -509,21 +509,37 @@ async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
 
+    for SERVER in SERVERS:
+        queue_item = SERVER.get_queue().find_queue_item_by_username(chat.id)
+        if queue_item:
+            SERVER_ADDRESS = SERVER
+
+        prompts = queue_item.get_prompt()
+        
+
+
+    if SERVER_ADDRESS is None:
+        SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
+
+        item = QueueItem(SERVER_ADDRESS, chat.id, prompts)
+        queue = SERVER_ADDRESS.get_queue()
+        queue.add_to_queue(item)
+    
+
+    queue_position = SERVER_ADDRESS.get_queue().determine_pos(item)
+    if queue_position != 0:
+        await bot.send_message(chat_id=chat.id, text=f'Your current queue position is {queue_position}. We will notify you when that changes.')
+        return
+    
+
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
 
     SERVERS = SERVER_ADDRESSES.servers()
     SERVER_ADDRESS = None
 
-    for SERVER in SERVERS:
-        if SERVER.get_queue().find_queue_item_by_username(chat.id):
-            SERVER_ADDRESS = SERVER
-
     
-    if SERVER_ADDRESS is None:
-        await bot.send_message(chat_id=chat.id, text="There's been a problem trying to find your place in a queue. Try again later")
-        return
-
+    
 
     async with aiohttp.ClientSession() as session:
         ws = await session.ws_connect(f"ws://{SERVER_ADDRESS.address()}/ws?clientId={client_id}")
@@ -539,9 +555,9 @@ async def comfy(chat, prompts, cfg):
             try:
                 await bot.send_video(chat_id=chat.id, video=video, supports_streaming=True)
 
-                user_config = read_config(chat.id)
+                user_config = read_config(chat.id, chat.username)
                 user_config['tokens'] -= VIDEO_PRICE
-                update_config(chat.id, user_config)
+                update_config(chat.id, chat.username, user_config)
 
             except:
                 log.error("Error sending video")
@@ -555,19 +571,7 @@ async def comfy(chat, prompts, cfg):
 @bot.message_handler(commands=['generate'])
 async def start_message(message):
     add_config(message.chat)
-    SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
-
-    item = QueueItem(SERVER_ADDRESS, message.chat.id)
-    SERVER_ADDRESS.get_queue().add_to_queue(item)
-
-    queue_position = SERVER_ADDRESS.get_queue().determine_pos(item)
-    if queue_position != 0:
-        await bot.send_message(chat_id=message.chat.id, text='Currently our servers are at full capacity and can not process your prompt. Please, wait a bit and try again.')
-        await bot.send_message(chat_id=message.chat.id, text=f'Your current queue position is {queue_position}. We will notify you when that changes.')
-        return
-
     
-
     markup = quick_markup({
         'Text to Image': {'callback_data': 'txt2vid'},
         # 'Text to Video': {'callback_data': 'txt2vid'},
@@ -701,7 +705,7 @@ def add_config(data: telebot.types.Chat) -> bool:
 
     Возвращает False, если конфиг с таким айди уже существует
     """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{data.id}.yaml'
+    filename = f'{USER_CONFIGS_LOCATION}/config_{data.id}_{data.username}.yaml'
 
     if not os.path.exists(filename):
         with open(filename, 'w') as f:
@@ -716,13 +720,13 @@ def add_config(data: telebot.types.Chat) -> bool:
         
     return False
 
-def read_config(user: int) -> dict:
+def read_config(user: int, username: str) -> dict:
     """
     Прочитать конфиг пользователя по данному Телеграм ID.
 
     Возвращает пустой словарь, если конфиг указанного пользователя не существует.
     """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{user}.yaml'
+    filename = f'{USER_CONFIGS_LOCATION}/config_{user}_{username}.yaml'
 
     if not os.path.exists(filename):
         return {}
@@ -731,7 +735,7 @@ def read_config(user: int) -> dict:
             return yaml.safe_load(f)
     
 
-def update_config(user: int, data: dict) -> bool:
+def update_config(user: int, username: str, data: dict) -> bool:
     """
     Обновить конфиг указанного по Телеграм ID пользователя.
 
@@ -739,7 +743,7 @@ def update_config(user: int, data: dict) -> bool:
 
     Возвращает False, если указанного пользователя не существует.
     """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{user}.yaml'
+    filename = f'{USER_CONFIGS_LOCATION}/config_{user}_{username}.yaml'
 
     if not os.path.exists(filename):
         return False
