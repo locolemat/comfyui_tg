@@ -550,7 +550,6 @@ async def comfy(chat, prompts, cfg):
         videos = await get_video(ws, workflow, SERVER_ADDRESS.address(), session)
 
     for node_id in videos:
-        print('node_id_video: {node_id}')
         for video_data in videos[node_id]:
             video = video_data
 
