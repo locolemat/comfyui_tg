@@ -579,7 +579,7 @@ async def chat_m(message):
         whitelist.append(new.user.id)
 
 @bot.message_handler(content_types=['new_chat_members'])
-def bot_func(message):
+async def bot_func(message):
     print('Вариант второй сработал')
     new = message.new_chat_member
     if new.status == "member":
