@@ -209,10 +209,9 @@ async def check_access(id):
 
     if (id in config['whitelist']):
         log.info("Access allowed for %s, user in whitelist", id)
-        await bot.send_message(chat_id=id, text="Join AIDA's chat: https://t.me/videogenerationai")
         return True
 
-    await bot.send_message(chat_id=id, text=DENY_TEXT)
+    await bot.send_message(chat_id=id, text=DENY_TEXT + "\nJoin AIDA's chat: https://t.me/videogenerationai")
     log.warning("Access denied for %s, user not in whitelist", id)
     return False
 
