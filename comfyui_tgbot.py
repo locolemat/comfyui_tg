@@ -509,7 +509,7 @@ async def comfy(chat, prompts, cfg):
 
     SERVERS = SERVER_ADDRESSES.servers()
     SERVER_ADDRESS = None
-
+    queue_item = None
     
     for SERVER in SERVERS:
         queue_item = SERVER.get_queue().find_queue_item_by_username(chat.id)
@@ -522,16 +522,17 @@ async def comfy(chat, prompts, cfg):
     if SERVER_ADDRESS is None:
         SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
 
-        item = QueueItem(SERVER_ADDRESS, chat.id, prompts)
+        queue_item = QueueItem(SERVER_ADDRESS, chat.id, prompts)
         queue = SERVER_ADDRESS.get_queue()
-        queue.add_to_queue(item)
+        queue.add_to_queue(queue_item)
     
 
-    queue_position = SERVER_ADDRESS.get_queue().determine_pos(item)
+    queue_position = SERVER_ADDRESS.get_queue().determine_pos(queue_item)
     if queue_position != 0:
         await bot.send_message(chat_id=chat.id, text=f'Your current queue position is {queue_position}. We will notify you when that changes.')
         return
-    
+    else:
+        await bot.send_message(chat_id=chat.id, text=f'AIDA is currently working on your prompt.')
 
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
