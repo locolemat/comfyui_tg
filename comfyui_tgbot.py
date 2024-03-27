@@ -519,8 +519,7 @@ async def comfy(chat, prompts, cfg):
         queue_item = SERVER.get_queue().find_queue_item_by_username(chat.id)
         if queue_item:
             SERVER_ADDRESS = SERVER
-
-        prompts = queue_item.get_prompt()
+            prompts = queue_item.get_prompt()
         
 
 
