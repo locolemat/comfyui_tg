@@ -202,7 +202,7 @@ async def notify_of_queue_change(queue: Queue):
             chat = Chat(id=item.get_user(), type='private', username=item.get_username())
 
             await bot.send_message(chat_id=chat.id, text=f"It's your turn to generate now!")
-            await bot.set_state(chat.id, BotStates.text_aspect_ratio)
+            await bot.set_state(chat.id, BotStates.generate)
             
             await comfy(chat, item.get_prompt(), {})
             
@@ -642,7 +642,7 @@ async def callback_worker_image_to_video(call):
 
 @bot.callback_query_handler(state=BotStates.text_aspect_ratio, func=lambda call: call.data.startswith('txt'))
 async def message_reply(call):
-    await bot.set_state(call.message.chat.id, BotStates.text_to_video)
+    await bot.set_state(call.message.chat.id, BotStates.generate)
     ratio = call.data.strip('txt')
     aspect_ratios[call.message.chat.id] = ratio
     await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT)
@@ -650,7 +650,7 @@ async def message_reply(call):
 
 @bot.callback_query_handler(state=BotStates.video_aspect_ratio, func=lambda call: call.data.startswith('vid'))
 async def message_reply(call):
-    await bot.set_state(call.message.chat.id, BotStates.image_to_video)
+    await bot.set_state(call.message.chat.id, BotStates.generate)
     ratio = call.data.strip('txt')
     aspect_ratios[call.message.chat.id] = ratio
     await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT)
@@ -691,7 +691,7 @@ async def message_reply(call):
     
 
 
-@bot.message_handler(state=BotStates.text_to_video, content_types=['text'])
+@bot.message_handler(state=BotStates.generate, content_types=['text'])
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
     
@@ -709,7 +709,7 @@ async def message_reply(message):
     await comfy(message.chat, message.text, cfg)
 
 
-@bot.message_handler(state=BotStates.image_to_video, content_types=['photo'])
+@bot.message_handler(state=BotStates.generate, content_types=['photo'])
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
 
