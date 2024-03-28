@@ -729,7 +729,7 @@ async def message_reply(message):
 
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
-    asyncio.run(comfy(message.chat, prompt, cfg))
+    await comfy(message.chat, prompt, cfg)
 
 
 def add_config(data: telebot.types.Chat) -> bool:
