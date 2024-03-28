@@ -713,7 +713,7 @@ async def message_reply(message):
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
 
-    prompt = message.caption + aspect_ratios[message.from_user.id]
+    prompt = aspect_ratios[message.from_user.id]
     aspect_ratios.pop(message.from_user.id)
 
     cfg = {}
