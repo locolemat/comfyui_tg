@@ -47,9 +47,9 @@ class Queue:
     def get_items(self) -> list[QueueItem]:
         return self.__items
 
-    def find_queue_item_by_username(self, username: str) -> QueueItem:
+    def find_queue_item_by_user(self, user: int) -> QueueItem:
         for index in range(len(self.__items)):
-            if self.__items[index].get_user() == username:
+            if self.__items[index].get_user() == user:
                 return self.__items[index]
 
         return None

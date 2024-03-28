@@ -519,7 +519,7 @@ async def comfy(chat, prompts, cfg):
     queue_item = None
     
     for SERVER in SERVERS:
-        queue_item = SERVER.get_queue().find_queue_item_by_username(chat.id)
+        queue_item = SERVER.get_queue().find_queue_item_by_user(chat.id)
         if queue_item:
             SERVER_ADDRESS = SERVER
             prompts = queue_item.get_prompt()
@@ -533,6 +533,10 @@ async def comfy(chat, prompts, cfg):
         queue = SERVER_ADDRESS.get_queue()
         queue.add_to_queue(queue_item)
     
+    if queue_item is None:
+        await bot.send_message(chat_id=chat.id, text='There\'s been a problem trying to determine your position in the queue. Please, try again later.')
+    
+    print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue()}')
 
     queue_position = SERVER_ADDRESS.get_queue().determine_pos(queue_item)
     if queue_position != 0:
