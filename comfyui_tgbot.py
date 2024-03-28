@@ -100,6 +100,7 @@ if not os.path.exists('generated'):
 
 if (config['whitelist'] is None): # Allow all, whitelist is empty
     log.warning("Whitelist is empty, all users allowed to access this bot! Modify config.yaml")
+    whitelist = None
 else:
     whitelist = config['whitelist']
 
