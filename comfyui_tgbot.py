@@ -208,7 +208,7 @@ async def notify_of_queue_change(queue: Queue):
             
 
 async def check_access(id):
-    if (whitelist is None): # Allow all, whitelist is empty
+    if (whitelist is None or len(whitelist) == 0): # Allow all, whitelist is empty
         log.info("Access allowed for %s, empty whitelist in config yaml", id)
         await bot.send_message(chat_id=id, text="Join AIDA's chat: https://t.me/videogenerationai")
         
