@@ -596,9 +596,9 @@ async def start_message(message):
     add_config(message.chat)
     
     markup = quick_markup({
-        'Text to Image': {'callback_data': 'txt2vid'},
-        # 'Text to Video': {'callback_data': 'txt2vid'},
-        # 'Image to Video': {'callback_data': 'img2vid'}
+        # 'Text to Image': {'callback_data': 'txt2vid'},
+        'Text to Video': {'callback_data': 'txt2vid'},
+        'Image to Video': {'callback_data': 'img2vid'}
     }, row_width=2)
 
     SERVERS = SERVER_ADDRESSES.servers()
