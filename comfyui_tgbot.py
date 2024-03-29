@@ -536,6 +536,7 @@ async def comfy(chat, prompts, cfg):
     
     if queue_item is None:
         await bot.send_message(chat_id=chat.id, text='There\'s been a problem trying to determine your position in the queue. Please, try again later.')
+        print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue()}')
         return
     
     print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue()}')
