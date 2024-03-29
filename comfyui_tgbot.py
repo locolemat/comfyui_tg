@@ -701,7 +701,7 @@ async def message_reply(message):
             return
 
     prompt = message.text 
-    if message.from_user_id in aspect_ratios.keys():
+    if message.from_user.id in aspect_ratios.keys():
         prompt+= aspect_ratios[message.from_user.id]
     aspect_ratios.pop(message.from_user.id)
     cfg = {}
@@ -715,7 +715,7 @@ async def message_reply(message):
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
 
-    prompt = aspect_ratios[message.from_user.id] if message.from_user_id in aspect_ratios.keys() else ""
+    prompt = aspect_ratios[message.from_user.id] if message.from_user.id in aspect_ratios.keys() else ""
     aspect_ratios.pop(message.from_user.id)
 
     cfg = {}
