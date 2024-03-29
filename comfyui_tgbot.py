@@ -218,7 +218,8 @@ async def check_access(id):
         log.info("Access allowed for %s, user in whitelist", id)
         return True
 
-    await bot.send_message(chat_id=id, text=DENY_TEXT + "\nJoin AIDA's chat: https://t.me/videogenerationai")
+    await bot.send_message(chat_id=id, text=DENY_TEXT + "\nJoin AIDA's chat: https://t.me/AIDA_Generation")
+
     log.warning("Access denied for %s, user not in whitelist", id)
     return False
 
@@ -599,7 +600,7 @@ async def start_message(message):
     markup = quick_markup({
         # 'Text to Image': {'callback_data': 'txt2vid'},
         'Text to Video': {'callback_data': 'txt2vid'},
-        'Image to Video': {'callback_data': 'img2vid'}
+        # 'Image to Video': {'callback_data': 'img2vid'}
     }, row_width=2)
 
     SERVERS = SERVER_ADDRESSES.servers()
