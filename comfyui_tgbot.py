@@ -700,7 +700,9 @@ async def message_reply(message):
             await bot.send_message(chat_id=message.chat.id, text='Vulgar language is unacceptable.')
             return
 
-    prompt = message.text + aspect_ratios[message.from_user.id]
+    prompt = message.text 
+    if message.from_user_id in aspect_ratios.keys():
+        prompt+= aspect_ratios[message.from_user.id]
     aspect_ratios.pop(message.from_user.id)
     cfg = {}
 
@@ -713,7 +715,7 @@ async def message_reply(message):
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
 
-    prompt = aspect_ratios[message.from_user.id]
+    prompt = aspect_ratios[message.from_user.id] if message.from_user_id in aspect_ratios.keys() else ""
     aspect_ratios.pop(message.from_user.id)
 
     cfg = {}
