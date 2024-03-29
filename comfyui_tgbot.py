@@ -705,7 +705,7 @@ async def message_reply(message):
     prompt = message.text 
     if message.from_user.id in aspect_ratios.keys():
         prompt+= aspect_ratios[message.from_user.id]
-    aspect_ratios.pop(message.from_user.id)
+        aspect_ratios.pop(message.from_user.id)
     cfg = {}
 
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
@@ -716,9 +716,10 @@ async def message_reply(message):
 @bot.message_handler(state=BotStates.generate, content_types=['photo'])
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
-
-    prompt = aspect_ratios[message.from_user.id] if message.from_user.id in aspect_ratios.keys() else ""
-    aspect_ratios.pop(message.from_user.id)
+    prompt = ''
+    if message.from_user.id in aspect_ratios.keys():
+        prompt = aspect_ratios[message.from_user.id]
+        aspect_ratios.pop(message.from_user.id)
 
     cfg = {}
     
