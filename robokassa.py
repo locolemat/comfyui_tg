@@ -34,6 +34,23 @@ def check_signature_result(
         return True
     return False
 
+def generate_payment_data(merchant_login: str,  # Merchant login
+    cost: decimal,  # Cost of goods, RU
+    number: int,  # Invoice number
+    description: str,
+    signature: str,  # Description of the purchase
+    is_test = 0):
+    data = {
+        'MerchantLogin': merchant_login,
+        'OutSum': cost,
+        'InvId': number,
+        'Description': description,
+        'SignatureValue': signature,
+        'IsTest': is_test
+    }
+
+    return data
+
 
 # Формирование URL переадресации пользователя на оплату.
 
@@ -55,14 +72,7 @@ def generate_payment_link(
         merchant_password_1
     )
 
-    data = {
-        'MerchantLogin': merchant_login,
-        'OutSum': cost,
-        'InvId': number,
-        'Description': description,
-        'SignatureValue': signature,
-        'IsTest': is_test
-    }
+    data = generate_payment_data(merchant_login=merchant_login, cost=cost, number=number, description=description, signature=signature, is_test=is_test)
     return f'{robokassa_payment_url}?{parse.urlencode(data)}'
 
 
