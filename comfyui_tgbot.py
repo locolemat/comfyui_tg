@@ -25,7 +25,7 @@ import asyncio
 import telebot
 from telebot import asyncio_filters
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Chat
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, Chat, WebAppInfo
 from telebot.util import quick_markup
 from telebot.asyncio_storage import StateMemoryStorage
 from states import BotStates
@@ -44,6 +44,7 @@ from sanitize_filename import sanitize
 from server_address import ServerAddress, ServerAddressController
 from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
+from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link
 
 
 with open('config.yaml') as f:
@@ -61,6 +62,11 @@ with open('config.yaml') as f:
     DENY_TEXT = config['bot']['DENY_TEXT']
     CHOOSE_ASPECT_RATIO = config['bot']['CHOOSE_ASPECT_RATIO']
     USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
+
+    MERCHANT_LOGIN = config['payment']['MERCHANT_LOGIN']
+    MERCHANT_PASSWORD_1 = config['payment']['MERCHANT_PASSWORD_1']
+    COST = config['payment']['COST']
+    PAYMENT_DESC = config['payment']['DESCRIPTION']
 
     DEFAULT_MODEL = config['comfyui']['DEFAULT_MODEL']
     DEFAULT_VAE = config['comfyui']['DEFAULT_VAE']
@@ -592,6 +598,13 @@ async def bot_func(message):
     if new.status == "member":
         whitelist.append(new.user.id)
 
+
+@bot.message_handler(commands=['payment_test'])
+async def send_payment_link(message):
+    markup = quick_markup({
+        "Open a webapp":{'web_app': WebAppInfo(generate_payment_link(merchant_login=MERCHANT_LOGIN, merchant_password_1=MERCHANT_PASSWORD_1, cost=COST, number=1, description=PAYMENT_DESC, is_test=1))}
+    }, row_width=1)
+    await bot.send_message(chat_id=message.chat.id, text="You have to pay up.", reply_markup=markup)
 
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['generate'])

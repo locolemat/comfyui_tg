@@ -20,6 +20,12 @@ bot:
 To add a negative prompt, add it to the end of the message using the '|' separator.
 "
 
+payment:
+  MERCHANT_LOGIN: ""
+  MERCHANT_PASSWORD_1: ""
+  COST: 100.0
+  DESCRIPTION: ""
+
 comfyui:
   DEFAULT_MODEL: 'revAnimatedFp16_122.safetensors'
   DEFAULT_CONTROLNET: 'control_v11f1e_sd15_tile.pth'
