@@ -49,8 +49,9 @@ class Queue:
         return None
     
 
-    def add_to_queue(self, item: QueueItem):
+    def add_to_queue(self, item: QueueItem) -> int:
         self.__items.append(item)
+        return len(self.__items) - 1
 
     
     def advance_queue(self):

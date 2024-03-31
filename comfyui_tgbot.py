@@ -51,7 +51,7 @@ with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
     SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
-
+    QUEUE = Queue()
     TRANSLATE = config['bot']['TRANSLATE']
     INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
     HELP_TEXT = config['bot']['HELP_TEXT']
@@ -202,10 +202,10 @@ with open('workflows/wf_upscale.json') as json_file:
     wf_upscale = json.load(json_file)
 
 
-async def notify_of_queue_change(queue: Queue):
-    for item in queue.get_items():
-        await bot.send_message(chat_id=item.get_user(), text=f'Your position in the queue is now {queue.determine_pos(item)}!')
-        if queue.determine_pos(item) == 0:
+async def notify_of_queue_change():
+    for item in QUEUE.get_items():
+        await bot.send_message(chat_id=item.get_user(), text=f'Your position in the queue is now {QUEUE.determine_pos(item)}!')
+        if QUEUE.determine_pos(item) == 0:
             chat = Chat(id=item.get_user(), type='private', username=item.get_username())
 
             await bot.send_message(chat_id=chat.id, text=f"It's your turn to generate now!")
@@ -521,39 +521,50 @@ async def comfy(chat, prompts, cfg):
     if not await check_access(chat.id):
         return
 
-    SERVERS = SERVER_ADDRESSES.servers()
-    SERVER_ADDRESS = None
-    queue_item = None
+    # SERVERS = SERVER_ADDRESSES.servers()
+    # SERVER_ADDRESS = None
+    # queue_item = None
     
-    for SERVER in SERVERS:
-        queue_item = SERVER.get_queue().find_queue_item_by_user(chat.id)
-        if queue_item:
-            SERVER_ADDRESS = SERVER
-            prompts = queue_item.get_prompt()
+    # for SERVER in SERVERS:
+    #     queue_item = SERVER.get_queue().find_queue_item_by_user(chat.id)
+    #     if queue_item:
+    #         SERVER_ADDRESS = SERVER
+    #         prompts = queue_item.get_prompt()
         
 
 
+    # if SERVER_ADDRESS is None:
+    #     SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
+
+    #     queue_item = QueueItem(SERVER_ADDRESS, chat.id, prompts, chat.username)
+    #     queue = SERVER_ADDRESS.get_queue()
+    #     queue.add_to_queue(queue_item)
+    
+    # if queue_item is None:
+    #     await bot.send_message(chat_id=chat.id, text='There\'s been a problem trying to determine your position in the queue. Please, try again later.')
+    #     print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue().get_items()}')
+    #     return
+    
+    # print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue().get_items()}')
+
+    # queue_position = SERVER_ADDRESS.get_queue().determine_pos(queue_item)
+    # if queue_position != 0:
+    #     await bot.send_message(chat_id=chat.id, text=f'Your current queue position is {queue_position}. We will notify you when that changes.')
+    #     return
+    # else:
+    #     await bot.send_message(chat_id=chat.id, text=f'AIDA is currently working on your prompt.')
+    
+    SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
     if SERVER_ADDRESS is None:
-        SERVER_ADDRESS = SERVER_ADDRESSES.find_shortest_queue()
-
-        queue_item = QueueItem(SERVER_ADDRESS, chat.id, prompts, chat.username)
-        queue = SERVER_ADDRESS.get_queue()
-        queue.add_to_queue(queue_item)
-    
-    if queue_item is None:
-        await bot.send_message(chat_id=chat.id, text='There\'s been a problem trying to determine your position in the queue. Please, try again later.')
-        print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue().get_items()}')
+        queue_position = QUEUE.add_to_queue(QueueItem(user=chat.id, prompt=prompts, username=chat.username))
+        await bot.send_message(chat_id=chat.id, text=f'Your prompt is added to the queue. Your current position is {queue_position}')
         return
     
-    print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue().get_items()}')
-
-    queue_position = SERVER_ADDRESS.get_queue().determine_pos(queue_item)
+    queue_position = QUEUE.determine_pos(QUEUE.find_queue_item_by_user(chat.id))
     if queue_position != 0:
-        await bot.send_message(chat_id=chat.id, text=f'Your current queue position is {queue_position}. We will notify you when that changes.')
+        await bot.send_message(chat_id=chat.id, text=f'Your prompt is in the queue. Your current position is {queue_position}')
         return
-    else:
-        await bot.send_message(chat_id=chat.id, text=f'AIDA is currently working on your prompt.')
-
+    SERVER_ADDRESS.busy(True)
     cfg['id'] = chat.id
     workflow = setup_workflow(prompts, cfg)
 
@@ -578,9 +589,10 @@ async def comfy(chat, prompts, cfg):
             except:
                 log.error("Error sending video")
 
-    SERVER_ADDRESS.get_queue().advance_queue()
+    SERVER_ADDRESS.busy(False)
+    QUEUE.advance_queue()
 
-    await notify_of_queue_change(SERVER_ADDRESS.get_queue())
+    await notify_of_queue_change()
     await ws.close()
 
 
@@ -624,17 +636,16 @@ async def start_message(message):
         # 'Image to Video': {'callback_data': 'img2vid'}
     }, row_width=2)
 
-    SERVERS = SERVER_ADDRESSES.servers()
-    
-    for SERVER in SERVERS:
-        queue_item = SERVER.get_queue().find_queue_item_by_user(message.chat.id)
-        if queue_item:
-            if SERVER.get_queue().determine_pos(queue_item) == 0:
-                await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA is already hard at work bringing your masterpiece to life!")
-            else:
-                await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA has queued up your prompt and will begin work on it shortly. We'll notify you when that happens.")
-            return
-
+    # SERVERS = SERVER_ADDRESSES.servers()
+    # 
+    # for SERVER in SERVERS:
+    #     queue_item = SERVER.get_queue().find_queue_item_by_user(message.chat.id)
+    #     if queue_item:
+    #         if SERVER.get_queue().determine_pos(queue_item) == 0:
+    #             await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA is already hard at work bringing your masterpiece to life!")
+    #         else:
+    #             await bot.send_message(chat_id=message.chat.id, text="Be patient! AIDA has queued up your prompt and will begin work on it shortly. We'll notify you when that happens.")
+    #         return
 
     await bot.send_message(chat_id=message.chat.id, text=START_TEXT, reply_markup=markup)
 
