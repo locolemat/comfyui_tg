@@ -1,7 +1,6 @@
 
 class QueueItem:
-    def __init__(self, address, user: int, prompt: str, username: str):
-        self.__address = address
+    def __init__(self, user: int, prompt: str, username: str):
         self.__user = user
         self.__prompt = prompt
         self.__username = username
@@ -12,17 +11,12 @@ class QueueItem:
     
     def get_username(self) -> str:
         return self.__username
-    
-
-    def get_address(self):
-        return self.__address
-    
 
     def get_prompt(self) -> str:
         return self.__prompt
 
     def __eq__(self, other):
-        if self.__address.address() == other.__address.address() and self.__user == other.__user:
+        if self.__user == other.__user:
             return True
         return False
     

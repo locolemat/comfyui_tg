@@ -50,7 +50,7 @@ from robokassa import check_signature_result, check_success_payment, calculate_s
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
-    SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS, Queue()) for ADDRESS in config['network']['SERVER_ADDRESSES']])
+    SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
 
     TRANSLATE = config['bot']['TRANSLATE']
     INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
