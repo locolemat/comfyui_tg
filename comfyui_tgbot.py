@@ -44,7 +44,7 @@ from sanitize_filename import sanitize
 from server_address import ServerAddress, ServerAddressController
 from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
-from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link
+from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link, generate_payment_data
 
 
 with open('config.yaml') as f:
@@ -542,10 +542,10 @@ async def comfy(chat, prompts, cfg):
     
     if queue_item is None:
         await bot.send_message(chat_id=chat.id, text='There\'s been a problem trying to determine your position in the queue. Please, try again later.')
-        print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue()}')
+        print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue().get_items()}')
         return
     
-    print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue()}')
+    print(f'SERVER: {SERVER_ADDRESS.address()}, QUEUE:{SERVER_ADDRESS.get_queue().get_items()}')
 
     queue_position = SERVER_ADDRESS.get_queue().determine_pos(queue_item)
     if queue_position != 0:
@@ -601,8 +601,15 @@ async def bot_func(message):
 
 @bot.message_handler(commands=['payment_test'])
 async def send_payment_link(message):
+    signature = calculate_signature(
+        MERCHANT_LOGIN,
+        COST,
+        1,
+        MERCHANT_PASSWORD_1
+    )
+    data = generate_payment_data(merchant_login=MERCHANT_LOGIN, cost=COST, number=1, description=PAYMENT_DESC, signature=signature, is_test=1)
     markup = quick_markup({
-        "Open a webapp":{'web_app': WebAppInfo(generate_payment_link(merchant_login=MERCHANT_LOGIN, merchant_password_1=MERCHANT_PASSWORD_1, cost=COST, number=1, description=PAYMENT_DESC, is_test=1))}
+        "Open a webapp":{'web_app': WebAppInfo(generate_payment_link(data))}
     }, row_width=1)
     await bot.send_message(chat_id=message.chat.id, text="You have to pay up.", reply_markup=markup)
 
