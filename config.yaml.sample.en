@@ -23,6 +23,7 @@ To add a negative prompt, add it to the end of the message using the '|' separat
 payment:
   MERCHANT_LOGIN: ""
   MERCHANT_PASSWORD_1: ""
+  MERCHANT_PASSWORD_2: ""
   COST: 100.0
   DESCRIPTION: ""
 
