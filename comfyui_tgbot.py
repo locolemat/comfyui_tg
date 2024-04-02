@@ -596,19 +596,13 @@ async def comfy(chat, prompts, cfg):
     await ws.close()
 
 
-@bot.chat_member_handler()
-async def chat_m(message):
-    print('Вариант первый сработал')
-    new = message.new_chat_member
-    if new.status == "member":
-        whitelist.append(new.user.id)
 
 @bot.message_handler(content_types=['new_chat_members'])
 async def bot_func(message):
-    print('Вариант второй сработал')
-    new = message.new_chat_member
-    if new.status == "member":
-        whitelist.append(new.user.id)
+    
+    new = message.from_user.id
+    print(f'Новый пользователь: {new}')
+    whitelist.append(new)
 
 
 # @bot.message_handler(commands=['payment_test'])
