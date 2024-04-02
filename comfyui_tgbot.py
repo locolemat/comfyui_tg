@@ -561,7 +561,7 @@ async def comfy(chat, prompts, cfg):
         return
     
     queue_position = QUEUE.determine_pos(QUEUE.find_queue_item_by_user(chat.id))
-    if queue_position != 0:
+    if queue_position != 0 and queue_position is not None:
         await bot.send_message(chat_id=chat.id, text=f'Your prompt is in the queue. Your current position is {queue_position}')
         return
     SERVER_ADDRESS.busy(True)
