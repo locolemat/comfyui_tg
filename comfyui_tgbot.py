@@ -462,6 +462,7 @@ async def get_history(prompt_id, address, session):
         return await response.json()
 
 async def get_images(ws, prompt, address, session):
+    print(f'PROMPT: {prompt}')
     prompt_id = queue_prompt(prompt, address)['prompt_id']
     output_images = {}
     async for out in ws:
