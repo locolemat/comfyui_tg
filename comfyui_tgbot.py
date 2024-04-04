@@ -44,7 +44,7 @@ from sanitize_filename import sanitize
 from server_address import ServerAddress, ServerAddressController
 from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
-# from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link, generate_payment_data
+from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link, generate_payment_data
 
 
 with open('config.yaml') as f:
@@ -63,10 +63,10 @@ with open('config.yaml') as f:
     CHOOSE_ASPECT_RATIO = config['bot']['CHOOSE_ASPECT_RATIO']
     USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
 
-    # MERCHANT_LOGIN = config['payment']['MERCHANT_LOGIN']
-    # MERCHANT_PASSWORD_1 = config['payment']['MERCHANT_PASSWORD_1']
-    # COST = config['payment']['COST']
-    # PAYMENT_DESC = config['payment']['DESCRIPTION']
+    MERCHANT_LOGIN = config['payment']['MERCHANT_LOGIN']
+    MERCHANT_PASSWORD_1 = config['payment']['MERCHANT_PASSWORD_1']
+    COST = config['payment']['COST']
+    PAYMENT_DESC = config['payment']['DESCRIPTION']
 
     DEFAULT_MODEL = config['comfyui']['DEFAULT_MODEL']
     DEFAULT_VAE = config['comfyui']['DEFAULT_VAE']
@@ -462,7 +462,6 @@ async def get_history(prompt_id, address, session):
         return await response.json()
 
 async def get_images(ws, prompt, address, session):
-    print(f'PROMPT: {prompt}')
     prompt_id = queue_prompt(prompt, address)['prompt_id']
     output_images = {}
     async for out in ws:
@@ -606,19 +605,19 @@ async def bot_func(message):
     whitelist.append(new)
 
 
-# @bot.message_handler(commands=['payment_test'])
-# async def send_payment_link(message):
-#     signature = calculate_signature(
-#         MERCHANT_LOGIN,
-#         COST,
-#         1,
-#         MERCHANT_PASSWORD_1
-#     )
-#     data = generate_payment_data(merchant_login=MERCHANT_LOGIN, cost=COST, number=1, description=PAYMENT_DESC, signature=signature, is_test=1)
-#     markup = quick_markup({
-#         "Open a webapp":{'web_app': WebAppInfo(generate_payment_link(data))}
-#     }, row_width=1)
-#     await bot.send_message(chat_id=message.chat.id, text="You have to pay up.", reply_markup=markup)
+@bot.message_handler(commands=['payment'])
+async def send_payment_link(message):
+    signature = calculate_signature(
+        MERCHANT_LOGIN,
+        COST,
+        1,
+        MERCHANT_PASSWORD_1
+    )
+    data = generate_payment_data(merchant_login=MERCHANT_LOGIN, cost=COST, number=1, description=PAYMENT_DESC, signature=signature, is_test=1)
+    markup = quick_markup({
+        "Pay":{'web_app': WebAppInfo(generate_payment_link(data))}
+    }, row_width=1)
+    await bot.send_message(chat_id=message.chat.id, text="You have to pay.", reply_markup=markup)
 
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['generate'])
