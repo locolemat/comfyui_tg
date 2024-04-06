@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from telebot.async_telebot import AsyncTeleBot
-from robokassa import check_signature_result
+from robokassa import check_signature_result, calculate_signature
 from user_configs import read_config, update_config
 from pydantic import BaseModel
 from database import DB
@@ -25,7 +25,11 @@ with open('config.yaml') as f:
     config = yaml.safe_load(f)
 
     BOT_TOKEN = config['network']['BOT_TOKEN']
+    MERCHANT_LOGIN = config['payment']['MERCHANT_LOGIN']
     MERCHANT_PASSWORD_1 = config['payment']['MERCHANT_PASSWORD_1']
+    MERCHANT_PASSWORD_2 = config['payment']['MERCHANT_PASSWORD_2']
+    COST = config['payment']['COST']
+
 
 app = FastAPI()
 
@@ -46,14 +50,13 @@ async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentM
     logging.debug(f'It\'s of type {type(data)}')
     logging.debug(f'Here it is: {data}')
 
-    # if not check_signature_result(data['InvId'], data['OutSum'], data['SignatureValue'], MERCHANT_PASSWORD_1):
-    #     logging.debug('OK, it was pretty obvious')
-    #     return
+    if not check_signature_result(data['InvId'], data['OutSum'], data['SignatureValue'], MERCHANT_PASSWORD_2):
+         return
     
     logging.debug('Trying to get DB data')
     payments_db = DB('payments.sqlite3')
     payments_db.connect()
-    db_result = payments_db.get_payment(data['SignatureValue'])
+    db_result = payments_db.get_payment(calculate_signature(MERCHANT_LOGIN, COST, data['InvId'], MERCHANT_PASSWORD_1))
     payments_db.close()
 
     #DEBUG
