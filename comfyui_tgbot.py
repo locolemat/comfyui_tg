@@ -110,6 +110,13 @@ if (config['whitelist'] is None): # Allow all, whitelist is empty
 else:
     whitelist = config['whitelist']
 
+with open('blacklist.yaml') as f:
+    b_config = yaml.safe_load(f)
+
+blacklist = None
+if b_config['blacklist'] is not None:
+    blacklist = b_config['blacklist']
+
 if os.path.exists('chat_face.pkl'):
     with open('chat_face.pkl', 'rb') as f:
         chat_face = pickle.load(f)
@@ -215,6 +222,10 @@ async def notify_of_queue_change():
             
 
 async def check_access(id):
+    if (blacklist is not None and id in blacklist):
+        await bot.send_message(chat_id=id, text='You\'ve been blacklisted!')
+        return False
+
     if (whitelist is None or len(whitelist) == 0): # Allow all, whitelist is empty
         log.info("Access allowed for %s, empty whitelist in config yaml", id)
         
