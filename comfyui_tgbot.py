@@ -45,15 +45,17 @@ from server_address import ServerAddress, ServerAddressController
 from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
 from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link, generate_payment_data
+from database import DB
+from user_configs import add_config, update_config, read_config
 
 
+payments_db = DB(path='payments.sqlite3')
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
     SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
     QUEUE = Queue()
     TRANSLATE = config['bot']['TRANSLATE']
-    INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
     HELP_TEXT = config['bot']['HELP_TEXT']
     START_TEXT = config['bot']['START_TEXT']
     IMAGE_TO_VIDEO_TEXT = config['bot']['IMAGE_TO_VIDEO_TEXT']
@@ -61,7 +63,6 @@ with open('config.yaml') as f:
     VIDEO_PRICE = config['bot']['VIDEO_PRICE']
     DENY_TEXT = config['bot']['DENY_TEXT']
     CHOOSE_ASPECT_RATIO = config['bot']['CHOOSE_ASPECT_RATIO']
-    USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
 
     MERCHANT_LOGIN = config['payment']['MERCHANT_LOGIN']
     MERCHANT_PASSWORD_1 = config['payment']['MERCHANT_PASSWORD_1']
@@ -109,6 +110,13 @@ if (config['whitelist'] is None): # Allow all, whitelist is empty
     whitelist = None
 else:
     whitelist = config['whitelist']
+
+with open('blacklist.yaml') as f:
+    b_config = yaml.safe_load(f)
+
+blacklist = None
+if b_config['blacklist'] is not None:
+    blacklist = b_config['blacklist']
 
 if os.path.exists('chat_face.pkl'):
     with open('chat_face.pkl', 'rb') as f:
@@ -215,6 +223,10 @@ async def notify_of_queue_change():
             
 
 async def check_access(id):
+    if (blacklist is not None and id in blacklist):
+        await bot.send_message(chat_id=id, text='You\'ve been blacklisted!')
+        return False
+
     if (whitelist is None or len(whitelist) == 0): # Allow all, whitelist is empty
         log.info("Access allowed for %s, empty whitelist in config yaml", id)
         
@@ -617,6 +629,11 @@ async def send_payment_link(message):
     markup = quick_markup({
         "Pay":{'web_app': WebAppInfo(generate_payment_link(data))}
     }, row_width=1)
+
+    payments_db.connect()
+    payments_db.add_payment(out_sum=COST, signature=signature, username=message.chat.username, user_id=message.chat.id)
+    payments_db.close()
+
     await bot.send_message(chat_id=message.chat.id, text="You have to pay.", reply_markup=markup)
 
 @bot.message_handler(commands=['help'])
@@ -761,63 +778,6 @@ async def message_reply(message):
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
     await comfy(message.chat, prompt, cfg)
-
-
-def add_config(data: telebot.types.Chat) -> bool:
-    """
-    Добавить конфиг пользователя по данным о нём из бота
-
-    Принимает message.chat в качестве параметра
-
-    Возвращает False, если конфиг с таким айди уже существует
-    """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{data.id}_{data.username}.yaml'
-
-    if not os.path.exists(filename):
-        with open(filename, 'w') as f:
-            user_data = {'id': data.id, 
-                         'username': data.username, 
-                         'first_name': data.first_name, 
-                         'last_name': data.last_name,
-                         'tokens': INITIAL_TOKEN_AMOUNT}
-
-            yaml.dump(user_data, f)
-            return True
-        
-    return False
-
-def read_config(user: int, username: str) -> dict:
-    """
-    Прочитать конфиг пользователя по данному Телеграм ID.
-
-    Возвращает пустой словарь, если конфиг указанного пользователя не существует.
-    """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{user}_{username}.yaml'
-
-    if not os.path.exists(filename):
-        return {}
-    else:
-        with open(filename, 'r') as f:
-            return yaml.safe_load(f)
-    
-
-def update_config(user: int, username: str, data: dict) -> bool:
-    """
-    Обновить конфиг указанного по Телеграм ID пользователя.
-
-    Принимает ID и словарь - новый желаемый конфиг.
-
-    Возвращает False, если указанного пользователя не существует.
-    """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{user}_{username}.yaml'
-
-    if not os.path.exists(filename):
-        return False
-    else:
-        with open(filename, 'w') as f:
-            yaml.dump(data, f)
-            return True
-    
     
 
 log.info("Starting bot")
