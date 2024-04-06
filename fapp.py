@@ -65,13 +65,13 @@ async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentM
 
     username, user_id = db_result[3], db_result[4]
 
-    user_config = read_config(user_id, username)
-    user_config['tokens'] += 10
-    update_config(user_id, username, user_config)
+    # user_config = read_config(user_id, username)
+    # user_config['tokens'] += 10
+    # update_config(user_id, username, user_config)
 
     bot = AsyncTeleBot(BOT_TOKEN)
 
-    await bot.send_message(chat_id=user_id, text=f'Your payment has went through! Your token balance is updated to {user_config["tokens"]}')
+    await bot.send_message(chat_id=user_id, text=f'Your payment has went through! Your token balance is updated to BLANK')
 
     
 
