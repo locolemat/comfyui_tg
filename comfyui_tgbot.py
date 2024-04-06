@@ -46,6 +46,7 @@ from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
 from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link, generate_payment_data
 from database import DB
+from user_configs import add_config, update_config, read_config
 
 
 payments_db = DB(path='payments.sqlite3')
@@ -595,9 +596,9 @@ async def comfy(chat, prompts, cfg):
             try:
                 await bot.send_video(chat_id=chat.id, video=video, supports_streaming=True)
 
-                user_config = read_config(chat.id, chat.username)
+                user_config = read_config(chat.id, chat.username, USER_CONFIGS_LOCATION=USER_CONFIGS_LOCATION)
                 user_config['tokens'] -= VIDEO_PRICE
-                update_config(chat.id, chat.username, user_config)
+                update_config(chat.id, chat.username, user_config, USER_CONFIGS_LOCATION=USER_CONFIGS_LOCATION)
 
             except:
                 log.error("Error sending video")
@@ -630,7 +631,7 @@ async def send_payment_link(message):
     markup = quick_markup({
         "Pay":{'web_app': WebAppInfo(generate_payment_link(data))}
     }, row_width=1)
-    
+
     payments_db.connect()
     payments_db.add_payment(out_sum=COST, signature=signature, username=message.chat.username, user_id=message.chat.id)
     payments_db.close()
@@ -640,7 +641,7 @@ async def send_payment_link(message):
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['generate'])
 async def start_message(message):
-    add_config(message.chat)
+    add_config(message.chat, USER_CONFIGS_LOCATION=USER_CONFIGS_LOCATION, INITIAL_TOKEN_AMOUNT=INITIAL_TOKEN_AMOUNT)
     
     markup = quick_markup({
         # 'Text to Image': {'callback_data': 'txt2vid'},
@@ -779,63 +780,6 @@ async def message_reply(message):
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
     await comfy(message.chat, prompt, cfg)
-
-
-def add_config(data: telebot.types.Chat) -> bool:
-    """
-    Добавить конфиг пользователя по данным о нём из бота
-
-    Принимает message.chat в качестве параметра
-
-    Возвращает False, если конфиг с таким айди уже существует
-    """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{data.id}_{data.username}.yaml'
-
-    if not os.path.exists(filename):
-        with open(filename, 'w') as f:
-            user_data = {'id': data.id, 
-                         'username': data.username, 
-                         'first_name': data.first_name, 
-                         'last_name': data.last_name,
-                         'tokens': INITIAL_TOKEN_AMOUNT}
-
-            yaml.dump(user_data, f)
-            return True
-        
-    return False
-
-def read_config(user: int, username: str) -> dict:
-    """
-    Прочитать конфиг пользователя по данному Телеграм ID.
-
-    Возвращает пустой словарь, если конфиг указанного пользователя не существует.
-    """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{user}_{username}.yaml'
-
-    if not os.path.exists(filename):
-        return {}
-    else:
-        with open(filename, 'r') as f:
-            return yaml.safe_load(f)
-    
-
-def update_config(user: int, username: str, data: dict) -> bool:
-    """
-    Обновить конфиг указанного по Телеграм ID пользователя.
-
-    Принимает ID и словарь - новый желаемый конфиг.
-
-    Возвращает False, если указанного пользователя не существует.
-    """
-    filename = f'{USER_CONFIGS_LOCATION}/config_{user}_{username}.yaml'
-
-    if not os.path.exists(filename):
-        return False
-    else:
-        with open(filename, 'w') as f:
-            yaml.dump(data, f)
-            return True
-    
     
 
 log.info("Starting bot")
