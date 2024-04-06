@@ -3,7 +3,7 @@ import os
 
 class DB:
     def __init__(self, path: str):
-        self.__path = os.path.join(os.path.dirname(), path)
+        self.__path = os.path.join(os.path.dirname(__file__), path)
         self.__connection = None
 
 
