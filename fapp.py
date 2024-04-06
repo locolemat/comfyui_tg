@@ -32,7 +32,7 @@ app = FastAPI()
 @app.get('/robokassa_result')
 async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentMethod: str, IncSum: float, IncCurrLabel: str, EMail: str, Fee: float):
     logging.debug('I got a request!')
-    
+
     data = {"InvId": InvId,
             "OutSum": OutSum,
             "SignatureValue": SignatureValue,
@@ -47,9 +47,10 @@ async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentM
     logging.debug(f'Here it is: {data}')
 
     if not check_signature_result(data['InvId'], data['OutSum'], data['SignatureValue'], MERCHANT_PASSWORD_1):
+        logging.debug('OK, it was pretty obvious')
         return
     
-
+    logging.debug('Trying to get DB data')
     payments_db = DB('payments.sqlite3')
     payments_db.connect()
     db_result = payments_db.get_payment(data['SignatureValue'])
