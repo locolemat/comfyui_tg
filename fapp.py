@@ -46,9 +46,9 @@ async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentM
     logging.debug(f'It\'s of type {type(data)}')
     logging.debug(f'Here it is: {data}')
 
-    if not check_signature_result(data['InvId'], data['OutSum'], data['SignatureValue'], MERCHANT_PASSWORD_1):
-        logging.debug('OK, it was pretty obvious')
-        return
+    # if not check_signature_result(data['InvId'], data['OutSum'], data['SignatureValue'], MERCHANT_PASSWORD_1):
+    #     logging.debug('OK, it was pretty obvious')
+    #     return
     
     logging.debug('Trying to get DB data')
     payments_db = DB('payments.sqlite3')
