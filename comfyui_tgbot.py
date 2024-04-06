@@ -45,8 +45,10 @@ from server_address import ServerAddress, ServerAddressController
 from queue_system import Queue, QueueItem
 from exception_handler import ErrHandler
 from robokassa import check_signature_result, check_success_payment, calculate_signature, generate_payment_link, generate_payment_data
+from database import DB
 
 
+payments_db = DB(path='payments.sqlite3')
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
@@ -628,6 +630,11 @@ async def send_payment_link(message):
     markup = quick_markup({
         "Pay":{'web_app': WebAppInfo(generate_payment_link(data))}
     }, row_width=1)
+    
+    payments_db.connect()
+    payments_db.add_payment(out_sum=COST, signature=signature, username=message.chat.username, user_id=message.chat.id)
+    payments_db.close()
+
     await bot.send_message(chat_id=message.chat.id, text="You have to pay.", reply_markup=markup)
 
 @bot.message_handler(commands=['help'])
