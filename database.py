@@ -39,3 +39,8 @@ class DB:
         cursor = self.cursor()
         cursor.execute(f'SELECT * FROM {table} WHERE signature = {signature}')
         return cursor.fetchone()
+    
+    def get_last_inv_id(self, table: str = 'payments'):
+        cursor = self.cursor()
+        cursor.execute(f"SELECT * FROM {table} ORDER BY inv_id DESC LIMIT 1")
+        return cursor.fetchone()

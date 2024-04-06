@@ -619,10 +619,13 @@ async def bot_func(message):
 
 @bot.message_handler(commands=['payment'])
 async def send_payment_link(message):
+    payments_db.connect()
+    INV_ID = payments_db.get_last_inv_id()[0]
+
     signature = calculate_signature(
         MERCHANT_LOGIN,
         COST,
-        1,
+        INV_ID,
         MERCHANT_PASSWORD_1
     )
     data = generate_payment_data(merchant_login=MERCHANT_LOGIN, cost=COST, number=1, description=PAYMENT_DESC, signature=signature, is_test=1)
