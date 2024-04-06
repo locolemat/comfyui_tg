@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
+
 from telebot.async_telebot import AsyncTeleBot
 from robokassa import check_signature_result, calculate_signature
 from user_configs import read_config, update_config
@@ -33,7 +35,7 @@ with open('config.yaml') as f:
 
 app = FastAPI()
 
-@app.get('/robokassa_result')
+@app.get('/robokassa_result', response_class=PlainTextResponse)
 async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentMethod: str, IncSum: float, IncCurrLabel: str, EMail: str, Fee: float):
     logging.debug('I got a request!')
 
@@ -73,5 +75,5 @@ async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentM
 
     await bot.send_message(chat_id=user_id, text=f'Your payment has went through! Your token balance is updated to BLANK')
 
-    
+    return f'OK{data["InvId"]}'
 
