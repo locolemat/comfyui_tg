@@ -35,9 +35,9 @@ class DB:
         self.commit()
 
 
-    def get_payment(self, signature: str, table:str = 'payments'):
+    def get_payment(self, inv_id: int, table:str = 'payments'):
         cursor = self.cursor()
-        cursor.execute(f'SELECT * FROM {table} WHERE signature = {signature}')
+        cursor.execute(f'SELECT * FROM {table} WHERE inv_id = ?', (inv_id,))
         return cursor.fetchone()
     
     def get_last_inv_id(self, table: str = 'payments'):

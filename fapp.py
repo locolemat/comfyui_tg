@@ -57,7 +57,7 @@ async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentM
     logging.debug('Trying to get DB data')
     payments_db = DB('payments.sqlite3')
     payments_db.connect()
-    db_result = payments_db.get_payment(calculate_signature(MERCHANT_LOGIN, COST, data['InvId'], MERCHANT_PASSWORD_1))
+    db_result = payments_db.get_payment(data['InvId'])
     payments_db.close()
 
     #DEBUG
