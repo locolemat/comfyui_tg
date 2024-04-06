@@ -1,4 +1,4 @@
-from fastapi import Request, FastAPI
+from fastapi import FastAPI
 from telebot.async_telebot import AsyncTeleBot
 from robokassa import check_signature_result
 from user_configs import read_config, update_config
@@ -30,9 +30,18 @@ with open('config.yaml') as f:
 app = FastAPI()
 
 @app.get('/robokassa_result')
-async def check_payment(request: Request):
+async def check_payment(InvId: int, OutSum: float, SignatureValue: str, PaymentMethod: str, IncSum: float, IncCurrLabel: str, EMail: str, Fee: float):
     logging.debug('I got a request!')
-    data = await request.json()
+    
+    data = {"InvId": InvId,
+            "OutSum": OutSum,
+            "SignatureValue": SignatureValue,
+            "PaymentMethod": PaymentMethod,
+            "IncSum": IncSum,
+            "IncCurrLable": IncCurrLabel,
+            "EMail": EMail,
+            "Fee": Fee}
+    
     logging.debug('I got data!')
     logging.debug(f'It\'s of type {type(data)}')
     logging.debug(f'Here it is: {data}')
