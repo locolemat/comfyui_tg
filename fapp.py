@@ -8,6 +8,7 @@ from database import DB
 import yaml
 import sqlite3
 import asyncio
+import logging
 
 class Item(BaseModel):
     OutSum: float
@@ -18,6 +19,7 @@ class Item(BaseModel):
     PaymentMethod: str
     IncCurrLabel: str
 
+logging.basicConfig(level=logging.DEBUG, filename="fapp.log",filemode="a")
 
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
@@ -29,7 +31,11 @@ app = FastAPI()
 
 @app.get('/robokassa_result')
 async def check_payment(request: Request):
+    logging.debug('I got a request!')
     data = await request.json()
+    logging.debug('I got data!')
+    logging.debug(f'It\'s of type {type(data)}')
+    logging.debug(f'Here it is: {data}')
 
     if not check_signature_result(data['InvId'], data['OutSum'], data['SignatureValue'], MERCHANT_PASSWORD_1):
         return
@@ -41,7 +47,7 @@ async def check_payment(request: Request):
     payments_db.close()
 
     #DEBUG
-    print(db_result)
+    logging.debug(db_result)
 
     username, user_id = db_result[3], db_result[4]
 
