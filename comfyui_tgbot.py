@@ -628,7 +628,7 @@ async def send_payment_link(message):
         INV_ID,
         MERCHANT_PASSWORD_1
     )
-    data = generate_payment_data(merchant_login=MERCHANT_LOGIN, cost=COST, number=1, description=PAYMENT_DESC, signature=signature, is_test=1)
+    data = generate_payment_data(merchant_login=MERCHANT_LOGIN, cost=COST, number=INV_ID, description=PAYMENT_DESC, signature=signature, is_test=1)
     markup = quick_markup({
         "Pay":{'web_app': WebAppInfo(generate_payment_link(data))}
     }, row_width=1)
