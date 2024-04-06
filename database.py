@@ -37,5 +37,6 @@ class DB:
 
     def get_payment(self, signature: str, table:str = 'payments'):
         cursor = self.cursor()
+        print(f'SELECT * FROM {table} WHERE signature = \'{signature}\'')
         cursor.execute(f'SELECT * FROM {table} WHERE signature = \'{signature}\'')
         return cursor.fetchone()
