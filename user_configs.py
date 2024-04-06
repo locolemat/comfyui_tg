@@ -3,7 +3,13 @@ from telebot.types import Chat
 import yaml
 import os
 
-def add_config(data: Chat, USER_CONFIGS_LOCATION: str, INITIAL_TOKEN_AMOUNT: int) -> bool:
+with open('config.yaml') as f:
+    config = yaml.safe_load(f)
+    USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
+    INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
+
+    
+def add_config(data: Chat) -> bool:
     """
     Добавить конфиг пользователя по данным о нём из бота
 
@@ -26,7 +32,7 @@ def add_config(data: Chat, USER_CONFIGS_LOCATION: str, INITIAL_TOKEN_AMOUNT: int
         
     return False
 
-def read_config(user: int, username: str, USER_CONFIGS_LOCATION: str) -> dict:
+def read_config(user: int, username: str) -> dict:
     """
     Прочитать конфиг пользователя по данному Телеграм ID.
 
@@ -41,7 +47,7 @@ def read_config(user: int, username: str, USER_CONFIGS_LOCATION: str) -> dict:
             return yaml.safe_load(f)
     
 
-def update_config(user: int, username: str, data: dict, USER_CONFIGS_LOCATION: str) -> bool:
+def update_config(user: int, username: str, data: dict) -> bool:
     """
     Обновить конфиг указанного по Телеграм ID пользователя.
 

@@ -56,7 +56,6 @@ with open('config.yaml') as f:
     SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
     QUEUE = Queue()
     TRANSLATE = config['bot']['TRANSLATE']
-    INITIAL_TOKEN_AMOUNT = config['bot']['INITIAL_TOKEN_AMOUNT']
     HELP_TEXT = config['bot']['HELP_TEXT']
     START_TEXT = config['bot']['START_TEXT']
     IMAGE_TO_VIDEO_TEXT = config['bot']['IMAGE_TO_VIDEO_TEXT']
@@ -64,7 +63,6 @@ with open('config.yaml') as f:
     VIDEO_PRICE = config['bot']['VIDEO_PRICE']
     DENY_TEXT = config['bot']['DENY_TEXT']
     CHOOSE_ASPECT_RATIO = config['bot']['CHOOSE_ASPECT_RATIO']
-    USER_CONFIGS_LOCATION = config['bot']['USER_CONFIGS_LOCATION']
 
     MERCHANT_LOGIN = config['payment']['MERCHANT_LOGIN']
     MERCHANT_PASSWORD_1 = config['payment']['MERCHANT_PASSWORD_1']
@@ -596,9 +594,9 @@ async def comfy(chat, prompts, cfg):
             try:
                 await bot.send_video(chat_id=chat.id, video=video, supports_streaming=True)
 
-                user_config = read_config(chat.id, chat.username, USER_CONFIGS_LOCATION=USER_CONFIGS_LOCATION)
+                user_config = read_config(chat.id, chat.username)
                 user_config['tokens'] -= VIDEO_PRICE
-                update_config(chat.id, chat.username, user_config, USER_CONFIGS_LOCATION=USER_CONFIGS_LOCATION)
+                update_config(chat.id, chat.username, user_config)
 
             except:
                 log.error("Error sending video")
@@ -641,7 +639,7 @@ async def send_payment_link(message):
 @bot.message_handler(commands=['help'])
 @bot.message_handler(commands=['generate'])
 async def start_message(message):
-    add_config(message.chat, USER_CONFIGS_LOCATION=USER_CONFIGS_LOCATION, INITIAL_TOKEN_AMOUNT=INITIAL_TOKEN_AMOUNT)
+    add_config(message.chat)
     
     markup = quick_markup({
         # 'Text to Image': {'callback_data': 'txt2vid'},
