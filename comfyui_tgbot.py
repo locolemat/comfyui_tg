@@ -372,18 +372,18 @@ def setup_workflow(prompt, config):
         #     if (workflow[node]['class_type'] == 'ControlNetApply'):
         #        workflow[node]['inputs']['strength'] = config['cn_strength']
 
-        # if ("weight" in workflow[node]['inputs']):
-        #     if (workflow[node]['class_type'] == 'IPAdapterApply'): # face-5 style-31
-        #         if (node == "5"): #face
-        #             if (config['face']):
-        #                 workflow[node]['inputs']['weight'] = config['face_weight']
-        #             else:
-        #                 workflow[node]['inputs']['weight'] = 0
-        #         if (node == "31"): #style
-        #             if (config['style']):
-        #                 workflow[node]['inputs']['weight'] = config['style_weight']
-        #             else:
-        #                 workflow[node]['inputs']['weight'] = 0
+        if ("weight" in workflow[node]['inputs']):
+            if (workflow[node]['class_type'] == 'IPAdapterApply'): # face-5 style-31
+                if (node == "5"): #face
+                    if (config['face']):
+                        workflow[node]['inputs']['weight'] = config['face_weight']
+                    else:
+                        workflow[node]['inputs']['weight'] = 0
+                if (node == "31"): #style
+                    if (config['style']):
+                        workflow[node]['inputs']['weight'] = config['style_weight']
+                    else:
+                        workflow[node]['inputs']['weight'] = 0
 
         # if ("width" in workflow[node]['inputs']):
         #     workflow[node]['inputs']['width'] = config['width']
