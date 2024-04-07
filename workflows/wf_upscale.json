@@ -23,29 +23,6 @@
     },
     "class_type": "CLIPVisionLoader"
   },
-  "5": {
-    "inputs": {
-      "weight": 1,
-      "noise": 0.49,
-      "ipadapter": [
-        "3",
-        0
-      ],
-      "clip_vision": [
-        "4",
-        0
-      ],
-      "image": [
-        "34",
-        0
-      ],
-      "model": [
-        "31",
-        0
-      ]
-    },
-    "class_type": "IPAdapterApply"
-  },
   "7": {
     "inputs": {
       "text": "positive prompt",
