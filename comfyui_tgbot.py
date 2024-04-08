@@ -206,7 +206,7 @@ def cmt():
 with open('workflows/t2v.json') as json_file:
     wf_noupscale = json.load(json_file)
 
-with open('workflows/wf_upscale.json') as json_file:
+with open('workflows/i2v.json') as json_file:
     wf_upscale = json.load(json_file)
 
 
