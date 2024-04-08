@@ -1,311 +1,198 @@
 {
-  "1": {
-    "inputs": {
-      "ckpt_name": "juggernaut_aftermath.safetensors"
-    },
-    "class_type": "CheckpointLoaderSimple"
-  },
-  "2": {
-    "inputs": {
-      "vae_name": "vaeFtMse840000Ema_v10.safetensors"
-    },
-    "class_type": "VAELoader"
-  },
   "3": {
     "inputs": {
-      "ipadapter_file": "ip-adapter-plus-face_sd15.safetensors"
-    },
-    "class_type": "IPAdapterModelLoader"
-  },
-  "4": {
-    "inputs": {
-      "clip_name": "clip_vision/model.safetensors"
-    },
-    "class_type": "CLIPVisionLoader"
-  },
-  "5": {
-    "inputs": {
-      "weight": 1,
-      "noise": 0.49,
-      "ipadapter": [
-        "3",
-        0
-      ],
-      "clip_vision": [
-        "4",
-        0
-      ],
-      "image": [
-        "34",
-        0
-      ],
-      "model": [
-        "31",
-        0
-      ]
-    },
-    "class_type": "IPAdapterApply"
-  },
-  "7": {
-    "inputs": {
-      "text": "positive prompt",
-      "clip": [
-        "36",
-        1
-      ]
-    },
-    "class_type": "CLIPTextEncode"
-  },
-  "8": {
-    "inputs": {
-      "text": "negative prompt",
-      "clip": [
-        "36",
-        1
-      ]
-    },
-    "class_type": "CLIPTextEncode"
-  },
-  "9": {
-    "inputs": {
-      "seed": 180744339164257,
-      "steps": 40,
-      "cfg": 7.5,
-      "sampler_name": "ddim",
-      "scheduler": "karras",
+      "seed": 808031108361547,
+      "steps": 32,
+      "cfg": 1.5,
+      "sampler_name": "lcm",
+      "scheduler": "sgm_uniform",
       "denoise": 1,
       "model": [
-        "36",
+        "10",
         0
       ],
       "positive": [
-        "20",
+        "6",
         0
       ],
       "negative": [
-        "8",
+        "7",
         0
       ],
       "latent_image": [
-        "10",
+        "16",
         0
       ]
     },
-    "class_type": "KSampler"
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "1.5\\anithing_v11Pruned.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": "positive prompt",
+      "clip": [
+        "15",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "bad anatomy, bad quality, worst quality, nude, completely nude, naked",
+      "clip": [
+        "15",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "8": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "vae": [
+        "17",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
   },
   "10": {
     "inputs": {
-      "width": 512,
-      "height": 768,
-      "batch_size": 1
+      "model_name": "AnimateLCM_sd15_t2v.ckpt",
+      "beta_schedule": "lcm",
+      "motion_scale": 1.1,
+      "apply_v2_models_properly": true,
+      "model": [
+        "15",
+        0
+      ],
+      "context_options": [
+        "11",
+        0
+      ]
     },
-    "class_type": "EmptyLatentImage"
+    "class_type": "ADE_AnimateDiffLoaderWithContext",
+    "_meta": {
+      "title": "AnimateDiff Loader [Legacy] 🎭🅐🅓①"
+    }
   },
   "11": {
     "inputs": {
-      "samples": [
-        "9",
-        0
-      ],
-      "vae": [
-        "2",
+      "context_length": 16,
+      "context_stride": 1,
+      "context_overlap": 4,
+      "context_schedule": "uniform",
+      "closed_loop": true,
+      "fuse_method": "flat",
+      "use_on_equal_length": true,
+      "start_percent": 0,
+      "guarantee_steps": 1
+    },
+    "class_type": "ADE_AnimateDiffUniformContextOptions",
+    "_meta": {
+      "title": "Context Options◆Looped Uniform 🎭🅐🅓"
+    }
+  },
+  "12": {
+    "inputs": {
+      "frame_rate": 30,
+      "loop_count": 0,
+      "filename_prefix": "AIDA-TG-BOT",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": false,
+      "pingpong": false,
+      "save_output": true,
+      "images": [
+        "13",
         0
       ]
     },
-    "class_type": "VAEDecode"
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Video Combine 🎥🅥🅗🅢"
+    }
   },
-  "14": {
+  "13": {
     "inputs": {
-      "image": "face image",
-      "choose file to upload": "image"
-    },
-    "class_type": "LoadImage"
-  },
-  "19": {
-    "inputs": {
-      "ratio": 0.4,
-      "model": [
-        "1",
-        0
-      ]
-    },
-    "class_type": "TomePatchModel"
-  },
-  "20": {
-    "inputs": {
-      "strength": 0.18,
-      "conditioning": [
-        "7",
-        0
-      ],
-      "control_net": [
-        "21",
-        0
-      ],
-      "image": [
-        "22",
-        0
-      ]
-    },
-    "class_type": "ControlNetApply"
-  },
-  "21": {
-    "inputs": {
-      "control_net_name": "control_v11f1e_sd15_tile.pth"
-    },
-    "class_type": "ControlNetLoader"
-  },
-  "22": {
-    "inputs": {
-      "image": "source image",
-      "choose file to upload": "image"
-    },
-    "class_type": "LoadImage"
-  },
-  "23": {
-    "inputs": {
-      "guide_size": 256,
-      "guide_size_for": true,
-      "max_size": 768,
-      "seed": 378984755894715,
-      "steps": 20,
-      "cfg": 8,
-      "sampler_name": "ddim",
-      "scheduler": "normal",
-      "denoise": 0.33,
-      "feather": 8,
-      "noise_mask": true,
-      "force_inpaint": true,
-      "bbox_threshold": 0.75,
-      "bbox_dilation": 10,
-      "bbox_crop_factor": 1.7000000000000002,
-      "sam_detection_hint": "center-1",
-      "sam_dilation": 0,
-      "sam_threshold": 0.93,
-      "sam_bbox_expansion": 0,
-      "sam_mask_hint_threshold": 0.7,
-      "sam_mask_hint_use_negative": "False",
-      "drop_size": 10,
-      "wildcard": "",
-      "image": [
-        "11",
-        0
-      ],
-      "model": [
-        "36",
-        0
-      ],
-      "clip": [
-        "36",
-        1
-      ],
-      "vae": [
-        "2",
-        0
-      ],
-      "positive": [
-        "7",
-        0
-      ],
-      "negative": [
+      "ckpt_name": "rife49.pth",
+      "clear_cache_after_n_frames": 10,
+      "multiplier": 5,
+      "fast_mode": true,
+      "ensemble": true,
+      "scale_factor": 2,
+      "frames": [
         "8",
         0
-      ],
-      "bbox_detector": [
-        "29",
-        0
       ]
     },
-    "class_type": "FaceDetailer"
+    "class_type": "RIFE VFI",
+    "_meta": {
+      "title": "RIFE VFI (recommend rife47 and rife49)"
+    }
   },
-  "29": {
+  "15": {
     "inputs": {
-      "model_name": "bbox/face_yolov8m.pt"
-    },
-    "class_type": "UltralyticsDetectorProvider"
-  },
-  "30": {
-    "inputs": {
-      "filename_prefix": "IPAdapter",
-      "images": [
-        "23",
-        0
-      ]
-    },
-    "class_type": "SaveImage"
-  },
-  "31": {
-    "inputs": {
-      "weight": 0.15,
-      "noise": 0.53,
-      "ipadapter": [
-        "32",
-        0
-      ],
-      "clip_vision": [
+      "lora_name": "AnimateLCM_sd15_t2v_lora.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
         "4",
         0
       ],
-      "image": [
-        "35",
-        0
-      ],
-      "model": [
-        "19",
-        0
-      ]
-    },
-    "class_type": "IPAdapterApply"
-  },
-  "32": {
-    "inputs": {
-      "ipadapter_file": "ip-adapter-plus_sd15.safetensors"
-    },
-    "class_type": "IPAdapterModelLoader"
-  },
-  "34": {
-    "inputs": {
-      "interpolation": "LANCZOS",
-      "crop_position": "center",
-      "sharpening": 0.03,
-      "image": [
-        "14",
-        0
-      ]
-    },
-    "class_type": "PrepImageForClipVision"
-  },
-  "35": {
-    "inputs": {
-      "image": "style image",
-      "choose file to upload": "image"
-    },
-    "class_type": "LoadImage"
-  },
-  "36": {
-    "inputs": {
-      "lora_name": "Curze MK1 by CARAXES.safetensors",
-      "strength_model": 0.5,
-      "strength_clip": 1,
-      "model": [
-        "5",
-        0
-      ],
       "clip": [
-        "37",
-        0
-      ]
-    },
-    "class_type": "LoraLoader"
-  },
-  "37": {
-    "inputs": {
-      "stop_at_clip_layer": -1,
-      "clip": [
-        "1",
+        "4",
         1
       ]
     },
-    "class_type": "CLIPSetLastLayer"
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "16": {
+    "inputs": {
+      "width": 384,
+      "height": 576,
+      "batch_size": 322
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "17": {
+    "inputs": {
+      "vae_name": "sd-vae-ft-mse.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
   }
 }
