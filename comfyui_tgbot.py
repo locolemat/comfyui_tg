@@ -511,11 +511,16 @@ async def get_video(ws, prompt, address, session):
     output_videos = {}
     async for out in ws:
         if out is not None:
-            message = json.loads(out.data)
-            if message['type'] == 'executing':
-                data = message['data']
-                if data['node'] is None and data['prompt_id'] == prompt_id:
-                    break
+            print(out.data)
+            print(type(out.data))
+            try:
+                message = json.loads(out.data)
+                if message['type'] == 'executing':
+                    data = message['data']
+                    if data['node'] is None and data['prompt_id'] == prompt_id:
+                        break
+            except:
+                continue
         else:
             continue
 
