@@ -457,6 +457,7 @@ def setup_workflow(prompt, config):
     return workflow
 
 def queue_prompt(prompt, address):
+    print(address)
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
     req =  urllib.request.Request("http://{}/prompt".format(address), data=data)
