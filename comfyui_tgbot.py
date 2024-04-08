@@ -219,7 +219,7 @@ async def notify_of_queue_change():
             await bot.send_message(chat_id=chat.id, text=f"It's your turn to generate now!")
             await bot.set_state(chat.id, BotStates.generate)
             
-            await comfy(chat, item.get_prompt(), {})
+            await comfy(chat, item.get_prompt(), {}, item.get_type())
             
 
 async def check_access(id):
@@ -350,8 +350,8 @@ def configure(prompt, cfg):
     return prompt, negative_prompt, config
 
 
-def setup_workflow(prompt, config):
-    if ('/upscale' in prompt):
+def setup_workflow(prompt, config, type):
+    if type == 'image':
         workflow = copy.deepcopy(wf_upscale)
     else:
         workflow = copy.deepcopy(wf_noupscale)
@@ -540,7 +540,7 @@ async def get_video(ws, prompt, address, session):
 
     return output_videos
 
-async def comfy(chat, prompts, cfg):
+async def comfy(chat, prompts, cfg, type):
     if not await check_access(chat.id):
         return
 
@@ -580,7 +580,7 @@ async def comfy(chat, prompts, cfg):
     # print(SERVER_ADDRESSES.servers())
     SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
     if SERVER_ADDRESS is None:
-        queue_position = QUEUE.add_to_queue(QueueItem(user=chat.id, prompt=prompts, username=chat.username))
+        queue_position = QUEUE.add_to_queue(QueueItem(user=chat.id, prompt=prompts, username=chat.username, type=type))
         await bot.send_message(chat_id=chat.id, text=f'Your prompt is added to the queue. Your current position is {queue_position + 1}')
         return
     
@@ -590,7 +590,7 @@ async def comfy(chat, prompts, cfg):
         return
     SERVER_ADDRESS.busy(True)
     cfg['id'] = chat.id
-    workflow = setup_workflow(prompts, cfg)
+    workflow = setup_workflow(prompts, cfg, type)
 
 
     async with aiohttp.ClientSession() as session:
@@ -660,7 +660,7 @@ async def start_message(message):
     markup = quick_markup({
         # 'Text to Image': {'callback_data': 'txt2vid'},
         'Text to Video': {'callback_data': 'txt2vid'},
-        # 'Image to Video': {'callback_data': 'img2vid'}
+        'Image to Video': {'callback_data': 'img2vid'}
     }, row_width=2)
 
     # SERVERS = SERVER_ADDRESSES.servers()
@@ -711,7 +711,7 @@ async def message_reply(call):
 @bot.callback_query_handler(state=BotStates.video_aspect_ratio, func=lambda call: call.data.startswith('vid'))
 async def message_reply(call):
     await bot.set_state(call.message.chat.id, BotStates.generate)
-    ratio = call.data.strip('txt')
+    ratio = call.data.strip('vid')
     aspect_ratios[call.message.chat.id] = ratio
     await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT)
 
@@ -768,7 +768,7 @@ async def message_reply(message):
 
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
 
-    await comfy(message.chat, message.text, cfg)
+    await comfy(message.chat, message.text, cfg, 'text')
 
 
 @bot.message_handler(state=BotStates.generate, content_types=['photo'])
@@ -793,7 +793,7 @@ async def message_reply(message):
 
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
-    await comfy(message.chat, prompt, cfg)
+    await comfy(message.chat, prompt, cfg, 'image')
     
 
 log.info("Starting bot")

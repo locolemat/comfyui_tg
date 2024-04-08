@@ -1,11 +1,14 @@
 
 class QueueItem:
-    def __init__(self, user: int, prompt: str, username: str):
+    def __init__(self, user: int, prompt: str, username: str, type: str = 'text'):
         self.__user = user
         self.__prompt = prompt
         self.__username = username
+        self.__type = type
 
-    
+    def get_type(self) -> str:
+        return self.__type
+
     def get_user(self) -> int:
         return self.__user
     
