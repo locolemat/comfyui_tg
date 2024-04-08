@@ -1,14 +1,14 @@
 {
   "3": {
     "inputs": {
-      "seed": 808031108361547,
+      "seed": 772089606176633,
       "steps": 32,
-      "cfg": 1.5,
+      "cfg": 2,
       "sampler_name": "lcm",
       "scheduler": "sgm_uniform",
       "denoise": 1,
       "model": [
-        "10",
+        "31",
         0
       ],
       "positive": [
@@ -31,7 +31,7 @@
   },
   "4": {
     "inputs": {
-      "ckpt_name": "1.5\\anithing_v11Pruned.safetensors"
+      "ckpt_name": "photon_v1.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
@@ -42,7 +42,7 @@
     "inputs": {
       "text": "positive prompt",
       "clip": [
-        "15",
+        "4",
         1
       ]
     },
@@ -53,9 +53,9 @@
   },
   "7": {
     "inputs": {
-      "text": "bad anatomy, bad quality, worst quality, nude, completely nude, naked",
+      "text": "bad anatomy, bad quality, worst quality",
       "clip": [
-        "15",
+        "4",
         1
       ]
     },
@@ -78,43 +78,6 @@
     "class_type": "VAEDecode",
     "_meta": {
       "title": "VAE Decode"
-    }
-  },
-  "10": {
-    "inputs": {
-      "model_name": "AnimateLCM_sd15_t2v.ckpt",
-      "beta_schedule": "lcm",
-      "motion_scale": 1.1,
-      "apply_v2_models_properly": true,
-      "model": [
-        "15",
-        0
-      ],
-      "context_options": [
-        "11",
-        0
-      ]
-    },
-    "class_type": "ADE_AnimateDiffLoaderWithContext",
-    "_meta": {
-      "title": "AnimateDiff Loader [Legacy] 🎭🅐🅓①"
-    }
-  },
-  "11": {
-    "inputs": {
-      "context_length": 16,
-      "context_stride": 1,
-      "context_overlap": 4,
-      "context_schedule": "uniform",
-      "closed_loop": true,
-      "fuse_method": "flat",
-      "use_on_equal_length": true,
-      "start_percent": 0,
-      "guarantee_steps": 1
-    },
-    "class_type": "ADE_AnimateDiffUniformContextOptions",
-    "_meta": {
-      "title": "Context Options◆Looped Uniform 🎭🅐🅓"
     }
   },
   "12": {
@@ -156,30 +119,11 @@
       "title": "RIFE VFI (recommend rife47 and rife49)"
     }
   },
-  "15": {
-    "inputs": {
-      "lora_name": "AnimateLCM_sd15_t2v_lora.safetensors",
-      "strength_model": 1,
-      "strength_clip": 1,
-      "model": [
-        "4",
-        0
-      ],
-      "clip": [
-        "4",
-        1
-      ]
-    },
-    "class_type": "LoraLoader",
-    "_meta": {
-      "title": "Load LoRA"
-    }
-  },
   "16": {
     "inputs": {
       "width": 384,
       "height": 576,
-      "batch_size": 322
+      "batch_size": 16
     },
     "class_type": "EmptyLatentImage",
     "_meta": {
@@ -188,11 +132,98 @@
   },
   "17": {
     "inputs": {
-      "vae_name": "sd-vae-ft-mse.safetensors"
+      "vae_name": "vae-ft-mse-840000-ema-pruned.safetensors"
     },
     "class_type": "VAELoader",
     "_meta": {
       "title": "Load VAE"
+    }
+  },
+  "23": {
+    "inputs": {
+      "float_val": 1.1
+    },
+    "class_type": "ADE_MultivalDynamic",
+    "_meta": {
+      "title": "Multival Dynamic 🎭🅐🅓"
+    }
+  },
+  "27": {
+    "inputs": {
+      "context_length": 16,
+      "context_stride": 1,
+      "context_overlap": 4,
+      "closed_loop": true,
+      "fuse_method": "flat",
+      "use_on_equal_length": true,
+      "start_percent": 0,
+      "guarantee_steps": 1
+    },
+    "class_type": "ADE_LoopedUniformContextOptions",
+    "_meta": {
+      "title": "Context Options◆Looped Uniform 🎭🅐🅓"
+    }
+  },
+  "31": {
+    "inputs": {
+      "beta_schedule": "lcm",
+      "model": [
+        "36",
+        0
+      ],
+      "m_models": [
+        "33",
+        0
+      ],
+      "context_options": [
+        "27",
+        0
+      ]
+    },
+    "class_type": "ADE_UseEvolvedSampling",
+    "_meta": {
+      "title": "Use Evolved Sampling 🎭🅐🅓②"
+    }
+  },
+  "33": {
+    "inputs": {
+      "start_percent": 0,
+      "end_percent": 1,
+      "motion_model": [
+        "34",
+        0
+      ],
+      "scale_multival": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "ADE_ApplyAnimateDiffModel",
+    "_meta": {
+      "title": "Apply AnimateDiff Model (Adv.) 🎭🅐🅓②"
+    }
+  },
+  "34": {
+    "inputs": {
+      "model_name": "AnimateLCM_sd15_t2v.ckpt"
+    },
+    "class_type": "ADE_LoadAnimateDiffModel",
+    "_meta": {
+      "title": "Load AnimateDiff Model 🎭🅐🅓②"
+    }
+  },
+  "36": {
+    "inputs": {
+      "lora_name": "AnimateLCM_sd15_t2v_lora.safetensors",
+      "strength_model": 1,
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
     }
   }
 }
