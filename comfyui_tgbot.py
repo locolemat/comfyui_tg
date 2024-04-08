@@ -478,11 +478,16 @@ async def get_images(ws, prompt, address, session):
     output_images = {}
     async for out in ws:
         if out is not None:
-            message = json.loads(out.data)
-            if message['type'] == 'executing':
-                data = message['data']
-                if data['node'] is None and data['prompt_id'] == prompt_id:
-                    break
+            print(out.data)
+            print(type(out.data))
+            try:
+                message = json.loads(out.data)
+                if message['type'] == 'executing':
+                    data = message['data']
+                    if data['node'] is None and data['prompt_id'] == prompt_id:
+                        break
+            except:
+                continue
         else:
             continue
 
