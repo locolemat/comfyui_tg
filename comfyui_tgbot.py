@@ -577,6 +577,7 @@ async def comfy(chat, prompts, cfg):
     # else:
     #     await bot.send_message(chat_id=chat.id, text=f'AIDA is currently working on your prompt.')
     
+    print(SERVER_ADDRESSES.servers())
     SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
     if SERVER_ADDRESS is None:
         queue_position = QUEUE.add_to_queue(QueueItem(user=chat.id, prompt=prompts, username=chat.username))

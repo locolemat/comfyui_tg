@@ -16,6 +16,13 @@ class ServerAddress:
             self.__address = address
         else:
             return self.__address
+        
+    def __str__(self):
+        return f'{self.__address} | {"BUSY" if self.__busy else "FREE"}'
+    
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 class ServerAddressController:
