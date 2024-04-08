@@ -457,7 +457,7 @@ def setup_workflow(prompt, config):
     return workflow
 
 def queue_prompt(prompt, address):
-    print(address)
+    # print(address)
     p = {"prompt": prompt, "client_id": client_id}
     data = json.dumps(p).encode('utf-8')
     req =  urllib.request.Request("http://{}/prompt".format(address), data=data)
@@ -479,8 +479,8 @@ async def get_images(ws, prompt, address, session):
     output_images = {}
     async for out in ws:
         if out is not None:
-            print(out.data)
-            print(type(out.data))
+            # print(out.data)
+            # print(type(out.data))
             try:
                 message = json.loads(out.data)
                 if message['type'] == 'executing':
@@ -512,8 +512,8 @@ async def get_video(ws, prompt, address, session):
     output_videos = {}
     async for out in ws:
         if out is not None:
-            print(out.data)
-            print(type(out.data))
+            # print(out.data)
+            # print(type(out.data))
             try:
                 message = json.loads(out.data)
                 if message['type'] == 'executing':
@@ -577,16 +577,16 @@ async def comfy(chat, prompts, cfg):
     # else:
     #     await bot.send_message(chat_id=chat.id, text=f'AIDA is currently working on your prompt.')
     
-    print(SERVER_ADDRESSES.servers())
+    # print(SERVER_ADDRESSES.servers())
     SERVER_ADDRESS = SERVER_ADDRESSES.find_available_server()
     if SERVER_ADDRESS is None:
         queue_position = QUEUE.add_to_queue(QueueItem(user=chat.id, prompt=prompts, username=chat.username))
-        await bot.send_message(chat_id=chat.id, text=f'Your prompt is added to the queue. Your current position is {queue_position}')
+        await bot.send_message(chat_id=chat.id, text=f'Your prompt is added to the queue. Your current position is {queue_position + 1}')
         return
     
     queue_position = QUEUE.determine_pos(QUEUE.find_queue_item_by_user(chat.id))
     if queue_position:
-        await bot.send_message(chat_id=chat.id, text=f'Your prompt is in the queue. Your current position is {queue_position}')
+        await bot.send_message(chat_id=chat.id, text=f'Your prompt is in the queue. Your current position is {queue_position + 1}')
         return
     SERVER_ADDRESS.busy(True)
     cfg['id'] = chat.id
