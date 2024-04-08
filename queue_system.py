@@ -55,7 +55,8 @@ class Queue:
 
     
     def advance_queue(self):
-        self.__items.pop(0)
+        if self.get_length():
+            self.__items.pop(0)
         # notify remaining people in the queue their position has advanced
 
     

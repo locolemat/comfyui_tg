@@ -602,6 +602,7 @@ async def comfy(chat, prompts, cfg):
                 log.error("Error sending video")
 
     SERVER_ADDRESS.busy(False)
+    
     QUEUE.advance_queue()
 
     await notify_of_queue_change()
