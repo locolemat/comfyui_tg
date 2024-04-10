@@ -786,7 +786,7 @@ async def message_reply(message):
     imgf = (await bot.download_file(tmp.file_path))
 
     fn = os.getcwd() + "/upload/source_" + str(message.chat.id) + "_" + str(cmt()) + ".png"
-    cfg['source_image'] = fn
+    cfg['source_image'] = os.path.basename(fn)
 
     with open(fn, 'wb') as new_file:
         new_file.write(imgf)    
