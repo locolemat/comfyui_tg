@@ -465,7 +465,7 @@ def queue_prompt(prompt, address):
 
 async def upload_image(image, address, session):
     data = aiohttp.FormData()
-    with open(os.getcwd() + "/upload/" + image, 'rb') as f:
+    with open(os.getcwd() + '/upload/' + image, 'rb') as f:
         data.add_field('file', f, filename=image, content_type='image/png')
         async with session.post(f'http://{address}/upload_image', data=data) as response:
             return await response.text()
