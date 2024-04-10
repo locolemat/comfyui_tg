@@ -2,6 +2,7 @@ class ServerAddress:
     def __init__(self, address: str, busy: bool = False):
         self.__address = address
         self.__busy = busy
+        self.__api_address = self.__address.split(':')[0] + ':8100'
 
     
     def busy(self, busy: bool | None = None) -> bool | None :
@@ -16,6 +17,12 @@ class ServerAddress:
             self.__address = address
         else:
             return self.__address
+        
+    def api_address(self, api_address: str | None = None) -> str | None :
+        if api_address is not None:
+            self.__api_address = api_address
+        else:
+            return self.__api_address
         
     def __str__(self):
         return f'{self.__address} | {"BUSY" if self.__busy else "FREE"}'

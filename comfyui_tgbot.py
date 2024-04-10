@@ -464,8 +464,8 @@ def queue_prompt(prompt, address):
     return json.loads(urllib.request.urlopen(req).read())
 
 async def upload_image(image, address, session):
-    data = {"image": {"file": open(os.getcwd() + "/upload/" + image, 'r'), "filename": image}, "overwrite": '', "subfolder": '', "type": 'input'}
-    async with session.post(f'http://{address}/upload/image', data=data) as response:
+    data = {"file": open(os.getcwd() + "/upload/" + image, 'rb')}
+    async with session.post(f'http://{address}/upload_image', data=data) as response:
         return await response.json()
 
 async def get_image(filename, subfolder, folder_type, address, session):
@@ -600,7 +600,7 @@ async def comfy(chat, prompts, cfg, type):
     async with aiohttp.ClientSession() as session:
         ws = await session.ws_connect(f"ws://{SERVER_ADDRESS.address()}/ws?clientId={client_id}")
         if 'source_image' in cfg.keys():
-            print(await upload_image(cfg['source_image'], SERVER_ADDRESS.address(), session))
+            print(await upload_image(cfg['source_image'], SERVER_ADDRESS.api_address(), session))
 
         images = await get_images(ws, workflow, SERVER_ADDRESS.address(), session)
         videos = await get_video(ws, workflow, SERVER_ADDRESS.address(), session)
