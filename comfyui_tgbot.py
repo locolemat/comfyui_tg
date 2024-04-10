@@ -464,7 +464,7 @@ def queue_prompt(prompt, address):
     return json.loads(urllib.request.urlopen(req).read())
 
 async def upload_image(image, address, session):
-    data = {"image": {"file": open(image, 'r'), "filename": image}, "overwrite": '', "subfolder": '', "type": ''}
+    data = {"image": {"file": open(os.getcwd() + "/upload/" + image, 'r'), "filename": image}, "overwrite": '', "subfolder": '', "type": ''}
     async with session.post(f'http://{address}/upload/image', data=data) as response:
         return await response.json()
 
