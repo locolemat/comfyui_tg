@@ -464,9 +464,12 @@ def queue_prompt(prompt, address):
     return json.loads(urllib.request.urlopen(req).read())
 
 async def upload_image(image, address, session):
-    data = {"file": open(os.getcwd() + "/upload/" + image, 'rb')}
-    async with session.post(f'http://{address}/upload_image', data=data) as response:
-        return await response.json()
+    data = aiohttp.FormData()
+    with open(os.getcwd() + "/upload/" + image, 'rb') as f:
+        data.add_field('file', f, filename=image, content_type='image/png')
+        async with session.post(f'http://{address}/upload_image', data=data) as response:
+            return await response.text()
+        
 
 async def get_image(filename, subfolder, folder_type, address, session):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
