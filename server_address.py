@@ -1,8 +1,8 @@
 class ServerAddress:
-    def __init__(self, address: str, busy: bool = False, api_port: str = ':8100'):
+    def __init__(self, address: str, busy: bool = False, api_port: str = '8100'):
         self.__address = address
         self.__busy = busy
-        self.__api_address = self.__address.split(':')[0] + api_port
+        self.__api_address = self.__address.split(':')[0] + f':{api_port}'
 
     
     def busy(self, busy: bool | None = None) -> bool | None :
@@ -25,7 +25,7 @@ class ServerAddress:
             return self.__api_address
         
     def __str__(self):
-        return f'{self.__address} | {"BUSY" if self.__busy else "FREE"}'
+        return f'{self.__address} | {"BUSY" if self.__busy else "FREE"} | API: {self.__api_address}'
     
     
     def __repr__(self):
@@ -49,4 +49,7 @@ class ServerAddressController:
 
     def add_server(self, server: ServerAddress):
         self.__servers.append(server)
+
+    def __str__(self):
+        return str(self.__servers)
 
