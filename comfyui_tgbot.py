@@ -342,7 +342,7 @@ def configure(prompt, cfg):
         config['style'] = False
         
     if (not 'source_image' in config):
-        config['source_image'] = os.getcwd() + '/assets/blank.png'
+        # config['source_image'] = os.getcwd() + '/assets/blank.png'
         config['cn_strength'] = 0
 
     if (not config['face'] and not config['style']):
