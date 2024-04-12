@@ -698,17 +698,6 @@ async def callback_worker_text_to_image(call):
     await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('img2vid'))    
-async def callback_worker_image_to_video(call):
-    await bot.set_state(call.message.chat.id, BotStates.video_aspect_ratio)
-    markup = quick_markup({
-        '1:1': {'callback_data': 'vid512x512'},
-        'Portrait (2:3)': {'callback_data': 'vid512x768'},
-        'Landscape (3:2)': {'callback_data': 'vid768x512'}
-    }, row_width=2)
-    await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
-
-
 @bot.callback_query_handler(state=BotStates.text_aspect_ratio, func=lambda call: call.data.startswith('txt'))
 async def message_reply(call):
     await bot.set_state(call.message.chat.id, BotStates.generate)
@@ -717,11 +706,9 @@ async def message_reply(call):
     await bot.send_message(chat_id=call.message.chat.id, text=HELP_TEXT)
 
 
-@bot.callback_query_handler(state=BotStates.video_aspect_ratio, func=lambda call: call.data.startswith('vid'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('img2vid'))
 async def message_reply(call):
     await bot.set_state(call.message.chat.id, BotStates.generate)
-    ratio = call.data.strip('vid')
-    aspect_ratios[call.message.chat.id] = ratio
     await bot.send_message(chat_id=call.message.chat.id, text=IMAGE_TO_VIDEO_TEXT)
 
     # if ('/me' in prompt):
