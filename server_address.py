@@ -1,8 +1,8 @@
 class ServerAddress:
-    def __init__(self, address: str, busy: bool = False):
+    def __init__(self, address: str, busy: bool = False, api_port: str = ':8100'):
         self.__address = address
         self.__busy = busy
-        self.__api_address = self.__address.split(':')[0] + ':8100'
+        self.__api_address = self.__address.split(':')[0] + api_port
 
     
     def busy(self, busy: bool | None = None) -> bool | None :
