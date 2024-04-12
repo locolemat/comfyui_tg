@@ -53,7 +53,7 @@ payments_db = DB(path='payments.sqlite3')
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
     BOT_TOKEN = config['network']['BOT_TOKEN']
-    SERVER_ADDRESSES = ServerAddressController([ServerAddress(ADDRESS) for ADDRESS in config['network']['SERVER_ADDRESSES']])
+    SERVER_ADDRESSES = ServerAddressController([ServerAddress(address=ADDRESS.split(',')[0], api_port=ADDRESS.split(',')[1]) for ADDRESS in config['network']['SERVER_ADDRESSES']])
     QUEUE = Queue()
     TRANSLATE = config['bot']['TRANSLATE']
     HELP_TEXT = config['bot']['HELP_TEXT']
