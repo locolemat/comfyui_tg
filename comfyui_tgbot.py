@@ -385,11 +385,11 @@ def setup_workflow(prompt, config, type):
                     else:
                         workflow[node]['inputs']['weight'] = 0
 
-        # if ("width" in workflow[node]['inputs']):
-        #     workflow[node]['inputs']['width'] = config['width']
+        if ("width" in workflow[node]['inputs']):
+            workflow[node]['inputs']['width'] = config['width']
 
-        # if ("height" in workflow[node]['inputs']):
-        #     workflow[node]['inputs']['height'] = config['height']
+        if ("height" in workflow[node]['inputs']):
+            workflow[node]['inputs']['height'] = config['height']
 
         # if ("seed" in workflow[node]['inputs']):
         #     workflow[node]['inputs']['seed'] = config['seed']
@@ -756,10 +756,9 @@ async def message_reply(message):
             await bot.send_message(chat_id=message.chat.id, text='Vulgar language is unacceptable.')
             return
 
-    prompt = message.text 
     if message.from_user.id in aspect_ratios.keys():
-        prompt+= aspect_ratios[message.from_user.id]
-        aspect_ratios.pop(message.from_user.id)
+        config["width"], config["height"] = aspect_ratios.pop(message.from_user.id).split('x')
+
     cfg = {}
 
     log.info("T2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.text)
@@ -770,10 +769,6 @@ async def message_reply(message):
 @bot.message_handler(state=BotStates.generate, content_types=['photo'])
 async def message_reply(message):
     await bot.delete_state(message.from_user.id, message.chat.id)
-    prompt = ''
-    if message.from_user.id in aspect_ratios.keys():
-        prompt = aspect_ratios[message.from_user.id]
-        aspect_ratios.pop(message.from_user.id)
 
     cfg = {}
     
@@ -789,7 +784,7 @@ async def message_reply(message):
 
     log.info("I2I:%s (%s %s) '%s'", message.chat.id, message.chat.first_name, message.chat.username, message.caption)
 
-    await comfy(message.chat, prompt, cfg, 'image')
+    await comfy(message.chat, message.text, cfg, 'image')
     
 
 log.info("Starting bot")
