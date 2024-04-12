@@ -691,8 +691,8 @@ async def callback_worker_text_to_image(call):
     await bot.set_state(call.message.chat.id, BotStates.text_aspect_ratio)
     markup = quick_markup({
         '1:1': {'callback_data': 'txt512x512'},
-        # 'Portrait (2:3)': {'callback_data': 'txt512x768'},
-        # 'Landscape (3:2)': {'callback_data': 'txt768x512'}
+        'Portrait (2:3)': {'callback_data': 'txt512x768'},
+        'Landscape (3:2)': {'callback_data': 'txt768x512'}
     }, row_width=2)
 
     await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
@@ -703,8 +703,8 @@ async def callback_worker_image_to_video(call):
     await bot.set_state(call.message.chat.id, BotStates.video_aspect_ratio)
     markup = quick_markup({
         '1:1': {'callback_data': 'vid512x512'},
-        # 'Portrait (2:3)': {'callback_data': 'vid512x768'},
-        # 'Landscape (3:2)': {'callback_data': 'vid768x512'}
+        'Portrait (2:3)': {'callback_data': 'vid512x768'},
+        'Landscape (3:2)': {'callback_data': 'vid768x512'}
     }, row_width=2)
     await bot.send_message(chat_id=call.message.chat.id, text=CHOOSE_ASPECT_RATIO, reply_markup=markup)
 
