@@ -550,6 +550,9 @@ async def get_video(ws, prompt, address, session):
 async def comfy(chat, prompts, cfg, type):
     if not await check_access(chat.id):
         return
+    
+    if prompts is None:
+        prompts = ''
 
     # SERVERS = SERVER_ADDRESSES.servers()
     # SERVER_ADDRESS = None
